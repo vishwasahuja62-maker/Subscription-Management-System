@@ -1,6 +1,6 @@
 # Subscription Management System 🚀
 
-A modern, robust, and responsive web application built with **Java (Servlets & JSP)** for managing SaaS subscriptions, customer billing, and payment tracking. Designed with a premium UI/UX, featuring a fully functional dark mode, glassmorphism elements, and a dynamic collapsible sidebar.
+A modern, robust, and responsive web application built with **Java (Servlets & JSP)** for managing SaaS subscriptions, customer billing, and payment tracking. Designed with a premium UI/UX, featuring a fully functional dark mode and a dynamic collapsible sidebar.
 
 ## ✨ Features
 
@@ -15,10 +15,12 @@ A modern, robust, and responsive web application built with **Java (Servlets & J
     *   Modern typography and micro-interactions for a snappy user experience.
     *   Custom logo masking to eliminate JPEG background artifacts.
 
+> **Note:** The application currently utilizes an **in-memory data store** for demonstration purposes. Full JDBC/Database integration is pending.
+
 ## 🛠️ Tech Stack
 
 *   **Backend**: Java 11+, Java Servlets, JSP (JavaServer Pages)
-*   **Frontend**: HTML5, CSS3 (Custom variables, Flexbox/Grid, Glassmorphism), Vanilla JavaScript
+*   **Frontend**: HTML5, CSS3 (Custom variables, Flexbox/Grid), Vanilla JavaScript
 *   **Server**: Apache Tomcat 9.0+
 *   **IDE**: IntelliJ IDEA (Configured with SmartTomcat)
 
