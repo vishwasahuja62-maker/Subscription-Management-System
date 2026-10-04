@@ -4,7 +4,7 @@ A modern, robust, and responsive web application built with **Java (Servlets & J
 
 ## ✨ Features
 
-*   **🔒 Secure Authentication**: Custom login portal with session management and error handling.
+*   **🔑 Admin Login**: Login interface with session-based authentication structure.
 *   **📊 Interactive Dashboard**: High-level metrics overview and recent activity tracking.
 *   **👥 Customer Management**: Full CRUD interface to add, edit, and manage subscriber details.
 *   **📦 Subscription Plans**: Tiered billing management (e.g., Basic, Pro, Enterprise).
