@@ -1,0 +1,103 @@
+/* ================================================================
+   tables.css  —  Table Styles
+   Subscription Management System
+   ================================================================ */
+@import 'variables.css';
+
+/* ── Table Wrapper ─────────────────────────────────────────────── */
+.table-wrapper {
+    overflow-x: auto;
+    background: var(--bg-card);
+    border-radius: var(--border-radius-md);
+    border: 1px solid var(--border-color);
+    box-shadow: var(--shadow-sm);
+}
+
+/* ── Table ─────────────────────────────────────────────────────── */
+.data-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: var(--font-size-sm);
+}
+
+/* Head */
+.data-table thead tr {
+    background: #f8fafc;
+    border-bottom: 2px solid var(--border-color);
+}
+.data-table thead th {
+    padding: 11px 16px;
+    text-align: left;
+    font-size: var(--font-size-xs);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    color: var(--text-secondary);
+    white-space: nowrap;
+}
+.data-table thead th:first-child { padding-left: 20px; }
+.data-table thead th:last-child  { padding-right: 20px; }
+
+/* Body */
+.data-table tbody tr {
+    border-bottom: 1px solid #f1f5f9;
+    transition: background var(--transition-fast);
+}
+.data-table tbody tr:last-child { border-bottom: none; }
+.data-table tbody tr:hover { background: #f8fafc; }
+
+.data-table td {
+    padding: 12px 16px;
+    color: var(--text-primary);
+    vertical-align: middle;
+}
+.data-table td:first-child { padding-left: 20px; }
+.data-table td:last-child  { padding-right: 20px; }
+
+/* ID column */
+.data-table .col-id { font-weight: 700; color: var(--color-primary); font-family: 'Courier New', monospace; font-size: var(--font-size-xs); }
+
+/* Name / Customer cells */
+.data-table .cell-name { font-weight: 600; color: var(--text-primary); }
+.data-table .cell-sub  { font-size: var(--font-size-xs); color: var(--text-muted); margin-top: 2px; }
+
+/* Action buttons inside table */
+.actions-cell { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+
+/* ── Table Footer / Pagination ─────────────────────────────────── */
+.table-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 20px;
+    border-top: 1px solid var(--border-color);
+    background: #f8fafc;
+    font-size: var(--font-size-xs);
+    color: var(--text-secondary);
+    border-radius: 0 0 var(--border-radius-md) var(--border-radius-md);
+}
+.pagination { display: flex; gap: 4px; }
+.page-btn {
+    width: 28px; height: 28px;
+    display: flex; align-items: center; justify-content: center;
+    border-radius: 6px;
+    border: 1.5px solid var(--border-color);
+    background: #fff;
+    font-size: var(--font-size-xs);
+    font-weight: 600;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+}
+.page-btn:hover  { border-color: var(--color-primary); color: var(--color-primary); }
+.page-btn.active { border-color: var(--color-primary); background: var(--color-primary); color: #fff; }
+.page-btn:disabled { opacity: .4; cursor: not-allowed; }
+
+/* ── Empty State ───────────────────────────────────────────────── */
+.empty-state {
+    text-align: center;
+    padding: var(--space-2xl) var(--space-lg);
+    color: var(--text-muted);
+}
+.empty-state svg { width: 48px; height: 48px; opacity: .3; margin-bottom: var(--space-md); }
+.empty-state h3  { font-size: var(--font-size-md); margin-bottom: 4px; }

@@ -1,0 +1,151 @@
+/* ================================================================
+   variables.css  —  Design Tokens
+   Subscription Management System
+   ================================================================ */
+
+:root {
+    /* ── Brand Colors ── */
+    --color-primary:        #2563eb;
+    --color-primary-dark:   #1d4ed8;
+    --color-primary-light:  #eff6ff;
+
+    /* ── Sidebar ── */
+    --sidebar-bg:           #1e293b;
+    --sidebar-width:        220px;
+    --sidebar-text:         #94a3b8;
+    --sidebar-active-bg:    #2563eb;
+    --sidebar-active-text:  #ffffff;
+    --sidebar-hover-bg:     #334155;
+    --sidebar-hover-text:   #e2e8f0;
+    --sidebar-icon-color:   #64748b;
+
+    /* ── Surface / Background ── */
+    --bg-app:               #f1f5f9;
+    --bg-card:              #ffffff;
+    --bg-header:            #ffffff;
+
+    /* ── Text ── */
+    --text-primary:         #1e293b;
+    --text-secondary:       #64748b;
+    --text-muted:           #94a3b8;
+    --text-white:           #ffffff;
+
+    /* ── Borders ── */
+    --border-color:         #e2e8f0;
+    --border-radius-sm:     6px;
+    --border-radius-md:     10px;
+    --border-radius-lg:     14px;
+
+    /* ── Shadows ── */
+    --shadow-sm:            0 1px 3px rgba(0,0,0,.08);
+    --shadow-md:            0 4px 12px rgba(0,0,0,.10);
+    --shadow-lg:            0 8px 30px rgba(0,0,0,.14);
+
+    /* ── Status Colors ── */
+    --color-success:        #22c55e;
+    --color-success-bg:     #f0fdf4;
+    --color-success-border: #bbf7d0;
+    --color-warning:        #f59e0b;
+    --color-warning-bg:     #fffbeb;
+    --color-warning-border: #fde68a;
+    --color-danger:         #ef4444;
+    --color-danger-bg:      #fef2f2;
+    --color-danger-border:  #fecaca;
+    --color-info:           #3b82f6;
+    --color-info-bg:        #eff6ff;
+    --color-info-border:    #bfdbfe;
+
+    /* ── Card Accent Colors ── */
+    --accent-blue:          #2563eb;
+    --accent-green:         #16a34a;
+    --accent-purple:        #7c3aed;
+    --accent-orange:        #ea580c;
+
+    /* ── Spacing ── */
+    --space-xs:   4px;
+    --space-sm:   8px;
+    --space-md:   16px;
+    --space-lg:   24px;
+    --space-xl:   32px;
+    --space-2xl:  48px;
+
+    /* ── Typography ── */
+    --font-family:  'Outfit', system-ui, sans-serif;
+    --font-size-xs: .8rem;
+    --font-size-sm: .875rem;
+    --font-size-md: 1rem;
+    --font-size-lg: 1.15rem;
+    --font-size-xl: 1.5rem;
+    --font-size-2xl: 2.2rem;
+
+    /* ── Transitions ── */
+    --transition-fast: 150ms ease;
+    --transition-med:  250ms ease;
+
+    /* ── Header height ── */
+    --header-height: 60px;
+}
+/* ================================================================
+   DARK MODE � Comprehensive Overrides
+   ================================================================ */
+body.dark-mode {
+    --bg-app:               #0f172a;
+    --bg-card:              #1e293b;
+    --bg-header:            #1e293b;
+    --text-primary:         #f8fafc;
+    --text-secondary:       #cbd5e1;
+    --text-muted:           #94a3b8;
+    --border-color:         #334155;
+    --color-primary-light:  #1e293b;
+}
+/* Layout */
+body.dark-mode,
+body.dark-mode .main-area,
+body.dark-mode .page-content { background: #0f172a; color: #f8fafc; }
+/* Topbar */
+body.dark-mode .topbar { background: #1e293b !important; border-bottom-color: #334155; }
+body.dark-mode .topbar-page-title { color: #f8fafc; }
+body.dark-mode .breadcrumb, body.dark-mode .header-user-role { color: #94a3b8; }
+body.dark-mode .notif-btn { color: #cbd5e1; }
+body.dark-mode .notif-btn:hover { background: #334155 !important; }
+/* Cards */
+body.dark-mode .card { background: #1e293b !important; border-color: #334155; }
+body.dark-mode .card-header { border-bottom-color: #334155; background: #1e293b; }
+body.dark-mode .card-title, body.dark-mode .stat-card-value { color: #f8fafc; }
+body.dark-mode .stat-card { background: #1e293b !important; }
+body.dark-mode .stat-card-label, body.dark-mode .stat-card-trend { color: #94a3b8; }
+/* Tables - these have hardcoded colors that need !important */
+body.dark-mode .table-wrapper { background: #1e293b !important; border-color: #334155; }
+body.dark-mode .data-table th { background: #0f172a !important; color: #94a3b8 !important; border-color: #334155; }
+body.dark-mode .data-table td { color: #f8fafc !important; border-color: #334155; }
+body.dark-mode .data-table tr { border-bottom-color: #334155 !important; }
+body.dark-mode .data-table tbody tr:hover { background: #334155 !important; }
+body.dark-mode .table-footer { background: #1e293b !important; border-top-color: #334155; color: #94a3b8; }
+/* Pagination */
+body.dark-mode .page-btn { background: #0f172a !important; color: #cbd5e1; border-color: #334155; }
+body.dark-mode .page-btn:hover { background: #334155 !important; color: #f8fafc; }
+body.dark-mode .page-btn.active { background: var(--color-primary) !important; color: #fff; }
+/* Buttons */
+body.dark-mode .btn-secondary { background: #0f172a !important; color: #cbd5e1; border-color: #334155; }
+body.dark-mode .btn-secondary:hover { background: #334155 !important; color: #f8fafc; }
+/* Forms */
+body.dark-mode .form-control { background: #0f172a !important; color: #f8fafc !important; border-color: #334155 !important; }
+body.dark-mode .form-control option { background: #0f172a; color: #f8fafc; }
+body.dark-mode .form-label { color: #cbd5e1; }
+body.dark-mode .search-input { background: #0f172a !important; color: #f8fafc !important; border-color: #334155 !important; }
+body.dark-mode .toolbar { background: #1e293b; border-color: #334155; }
+/* Modals */
+body.dark-mode .modal { background: #1e293b !important; border-color: #334155; }
+body.dark-mode .modal-header { border-bottom-color: #334155; }
+body.dark-mode .modal-title { color: #f8fafc; }
+body.dark-mode .modal-close:hover { background: #334155 !important; color: #f8fafc; }
+body.dark-mode .modal-footer { border-top-color: #334155; background: #1e293b; }
+/* Headings */
+body.dark-mode h1, body.dark-mode h2, body.dark-mode h3 { color: #f8fafc; }
+body.dark-mode .page-subtitle { color: #94a3b8; }
+/* Welcome banner */
+body.dark-mode .welcome-banner { background: linear-gradient(135deg, #1e3a8a, #6d28d9); }
+/* Scrollbar */
+body.dark-mode ::-webkit-scrollbar-track { background: #0f172a; }
+body.dark-mode ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+body.dark-mode ::-webkit-scrollbar-thumb:hover { background: #475569; }

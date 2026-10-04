@@ -1,0 +1,344 @@
+/* ================================================================
+   forms.css  —  Form, Modal & Input Styles
+   Subscription Management System
+   ================================================================ */
+@import 'variables.css';
+
+/* ── Form Group ────────────────────────────────────────────────── */
+.form-group {
+    margin-bottom: var(--space-md);
+}
+.form-label {
+    display: block;
+    font-size: var(--font-size-sm);
+    font-weight: 600;
+    color: var(--text-primary);
+    margin-bottom: 6px;
+}
+.form-label .required { color: var(--color-danger); margin-left: 2px; }
+
+/* ── Input / Select / Textarea ─────────────────────────────────── */
+.form-control {
+    width: 100%;
+    padding: 9px 12px;
+    border: 1.5px solid var(--border-color);
+    border-radius: var(--border-radius-sm);
+    font-size: var(--font-size-sm);
+    color: var(--text-primary);
+    background: #fff;
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+    appearance: none;
+    -webkit-appearance: none;
+}
+.form-control:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(37,99,235,.12);
+}
+.form-control::placeholder { color: var(--text-muted); }
+.form-control.is-invalid   { border-color: var(--color-danger); }
+.form-control.is-invalid:focus { box-shadow: 0 0 0 3px rgba(239,68,68,.12); }
+
+/* Select arrow */
+select.form-control {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2364748b' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 10px center;
+    padding-right: 30px;
+}
+
+/* Textarea */
+textarea.form-control { resize: vertical; min-height: 80px; }
+
+/* ── Input with icon ───────────────────────────────────────────── */
+.input-icon-wrap { position: relative; }
+.input-icon-wrap .input-icon {
+    position: absolute;
+    left: 10px; top: 50%;
+    transform: translateY(-50%);
+    color: var(--text-muted);
+    pointer-events: none;
+    width: 16px; height: 16px;
+}
+.input-icon-wrap .form-control { padding-left: 34px; }
+
+/* ── Validation message ─────────────────────────────────────────── */
+.form-error {
+    font-size: var(--font-size-xs);
+    color: var(--color-danger);
+    margin-top: 4px;
+    display: none;
+}
+.form-error.visible { display: block; }
+
+/* ── Checkbox & Radio ───────────────────────────────────────────── */
+.checkbox-group, .radio-group { display: flex; flex-wrap: wrap; gap: var(--space-sm) var(--space-md); }
+.checkbox-item, .radio-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-size: var(--font-size-sm);
+    color: var(--text-primary);
+    cursor: pointer;
+}
+.checkbox-item input, .radio-item input { accent-color: var(--color-primary); width: 15px; height: 15px; cursor: pointer; }
+
+/* ── Form Row / Grid ─────────────────────────────────────────────── */
+.form-row { display: grid; gap: var(--space-md); }
+.form-row-2 { grid-template-columns: 1fr 1fr; }
+.form-row-3 { grid-template-columns: 1fr 1fr 1fr; }
+
+/* ── Form Actions ────────────────────────────────────────────────── */
+.form-actions {
+    display: flex;
+    gap: var(--space-sm);
+    justify-content: flex-end;
+    padding-top: var(--space-md);
+    border-top: 1px solid var(--border-color);
+    margin-top: var(--space-md);
+}
+
+/* ── Section ─────────────────────────────────────────────────────── */
+.form-section-title {
+    font-size: var(--font-size-sm);
+    font-weight: 700;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: .06em;
+    margin-bottom: var(--space-md);
+    padding-bottom: var(--space-sm);
+    border-bottom: 1px solid var(--border-color);
+}
+
+/* ================================================================
+   MODAL
+   ================================================================ */
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 23, 42, 0.5);
+    backdrop-filter: blur(3px);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity var(--transition-med), visibility var(--transition-med);
+}
+.modal-overlay.open {
+    opacity: 1;
+    visibility: visible;
+}
+.modal {
+    background: var(--bg-card);
+    border-radius: var(--border-radius-lg);
+    box-shadow: var(--shadow-lg);
+    width: 100%;
+    max-height: 90vh;
+    overflow-y: auto;
+    transform: scale(.95) translateY(-10px);
+    transition: transform var(--transition-med);
+}
+.modal-overlay.open .modal { transform: scale(1) translateY(0); }
+
+.modal-sm { max-width: 420px; }
+.modal-md { max-width: 580px; }
+.modal-lg { max-width: 760px; }
+
+.modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: var(--space-md) var(--space-lg);
+    border-bottom: 1px solid var(--border-color);
+    position: sticky;
+    top: 0;
+    background: var(--bg-card);
+    z-index: 1;
+}
+.modal-title {
+    font-size: var(--font-size-md);
+    font-weight: 700;
+    color: var(--text-primary);
+}
+.modal-close {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    padding: 4px;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    cursor: pointer;
+    transition: color var(--transition-fast), background var(--transition-fast);
+}
+.modal-close:hover { color: var(--text-primary); background: var(--bg-app); }
+
+.modal-body { padding: var(--space-lg); }
+.modal-footer {
+    display: flex;
+    gap: var(--space-sm);
+    justify-content: flex-end;
+    padding: var(--space-md) var(--space-lg);
+    border-top: 1px solid var(--border-color);
+}
+
+/* ── Confirm / Delete Modal ──────────────────────────────────────── */
+.confirm-modal-icon {
+    width: 56px; height: 56px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    margin: 0 auto var(--space-md);
+}
+.confirm-modal-icon.danger { background: var(--color-danger-bg); color: var(--color-danger); }
+.confirm-modal-body { text-align: center; padding: var(--space-xl) var(--space-lg) var(--space-md); }
+.confirm-modal-body h3 { font-size: var(--font-size-lg); margin-bottom: var(--space-sm); }
+.confirm-modal-body p  { color: var(--text-secondary); font-size: var(--font-size-sm); }
+
+/* ================================================================
+   LOGIN PAGE (special standalone layout)
+   ================================================================ */
+.login-page {
+    min-height: 100vh;
+    background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 40%, #1e3a8a 100%);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: var(--space-lg);
+    position: relative;
+    overflow: hidden;
+}
+.login-page::before {
+    content: '';
+    position: absolute;
+    width: 500px; height: 500px;
+    background: radial-gradient(circle, rgba(99,102,241,0.25) 0%, transparent 70%);
+    top: -100px; right: -100px;
+    border-radius: 50%;
+    pointer-events: none;
+}
+.login-page::after {
+    content: '';
+    position: absolute;
+    width: 400px; height: 400px;
+    background: radial-gradient(circle, rgba(37,99,235,0.2) 0%, transparent 70%);
+    bottom: -80px; left: -80px;
+    border-radius: 50%;
+    pointer-events: none;
+}
+.login-card {
+    background: #ffffff;
+    border-radius: 20px;
+    box-shadow: 0 32px 80px rgba(0,0,0,0.45);
+    padding: 48px 44px;
+    width: 100%;
+    max-width: 440px;
+    position: relative;
+    z-index: 1;
+}
+.login-logo {
+    width: 64px; height: 64px;
+    background: linear-gradient(135deg, #6366f1, #2563eb);
+    border-radius: 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto var(--space-lg);
+    box-shadow: 0 8px 24px rgba(99,102,241,0.4);
+}
+.login-logo svg { color: #fff; width: 32px; height: 32px; }
+.login-title {
+    text-align: center;
+    font-size: 1.5rem;
+    font-weight: 800;
+    color: #1e293b;
+    margin-bottom: 6px;
+    letter-spacing: -0.3px;
+}
+.login-subtitle {
+    text-align: center;
+    font-size: 0.9rem;
+    color: #64748b;
+    margin-bottom: var(--space-xl);
+    font-weight: 400;
+}
+.login-card .form-label { color: #374151; font-size: 0.875rem; font-weight: 600; margin-bottom: 6px; }
+.login-card .required { color: #ef4444; }
+.login-card .form-control {
+    background: #f8fafc !important;
+    border: 1.5px solid #e2e8f0 !important;
+    color: #1e293b !important;
+    border-radius: 10px;
+    font-size: 0.95rem;
+    padding: 11px 14px 11px 42px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+.login-card .form-control::placeholder { color: #94a3b8; }
+.login-card .form-control:focus {
+    background: #fff !important;
+    border-color: #6366f1 !important;
+    box-shadow: 0 0 0 3px rgba(99,102,241,0.15) !important;
+    outline: none;
+}
+.login-card select.form-control { padding-left: 14px; }
+.login-card .input-icon { color: #94a3b8; }
+.login-footer-links {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: var(--space-md);
+    font-size: 0.82rem;
+    color: #64748b;
+}
+.login-footer-links label { cursor: pointer; display: flex; align-items: center; gap: 6px; }
+.login-link { color: #6366f1; cursor: pointer; font-weight: 500; }
+.login-link:hover { text-decoration: underline; color: #4f46e5; }
+.login-btn {
+    width: 100%;
+    justify-content: center;
+    padding: 13px;
+    font-size: 1rem;
+    font-weight: 600;
+    margin-top: var(--space-lg);
+    border-radius: 10px;
+    background: linear-gradient(135deg, #6366f1, #2563eb) !important;
+    border: none !important;
+    color: #fff !important;
+    letter-spacing: 0.3px;
+    box-shadow: 0 6px 20px rgba(99,102,241,0.35);
+    transition: box-shadow 0.2s, transform 0.15s;
+}
+.login-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 30px rgba(99,102,241,0.5) !important;
+}
+.login-card .login-error-box {
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 8px;
+    padding: 10px 14px;
+    color: #b91c1c;
+    font-size: 0.85rem;
+    margin-bottom: 16px;
+    text-align: center;
+}
+/* -- Login page dark mode safety override -- */
+body.dark-mode .login-page {
+    background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 40%, #1e3a8a 100%) !important;
+}
+body.dark-mode .login-card {
+    background: #ffffff !important;
+    border: none !important;
+}
+body.dark-mode .login-title { color: #1e293b !important; }
+body.dark-mode .login-subtitle { color: #64748b !important; }
+body.dark-mode .login-card .form-label { color: #374151 !important; }
+body.dark-mode .login-card .form-control {
+    background: #f8fafc !important;
+    border-color: #e2e8f0 !important;
+    color: #1e293b !important;
+}
+body.dark-mode .login-card .form-control::placeholder { color: #94a3b8 !important; }
+body.dark-mode .login-footer-links, body.dark-mode .login-footer-links .checkbox-item { color: #64748b !important; }
+body.dark-mode .login-link { color: #6366f1 !important; }
