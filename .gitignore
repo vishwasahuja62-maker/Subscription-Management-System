@@ -34,3 +34,6 @@ target/
 .settings/
 
 .sf/
+
+# Local database credentials
+.env

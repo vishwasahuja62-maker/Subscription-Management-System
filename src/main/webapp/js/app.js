@@ -1,55 +1,100 @@
 /* ================================================================
    app.js  —  Client-side logic for Subscription Management System
-   Handles: navigation, sample data, CRUD operations, modals,
+   Handles: navigation, database-backed CRUD operations, modals,
             search/filter, validation, and UI helpers.
    ================================================================ */
 
 'use strict';
 
-/* ================================================================
-   SAMPLE DATA  (replaces DB in frontend demo phase)
-   Each array mimics what a Servlet would return from a DAO/JDBC call.
-   ================================================================ */
+const APP_CONTEXT = window.location.pathname.slice(0, window.location.pathname.lastIndexOf('/'));
+
 const DB = {
-    customers: [
-        { id: 'C001', name: 'Rahul Sharma',  email: 'rahul@gmail.com',    phone: '9876543210', dob: '1995-03-14', address: '12, MG Road, Delhi', status: 'Active' },
-        { id: 'C002', name: 'Priya Singh',   email: 'priya@gmail.com',    phone: '9804321567', dob: '1998-07-22', address: '45, Park Street, Mumbai', status: 'Active' },
-        { id: 'C003', name: 'Aman Verma',    email: 'aman@gmail.com',     phone: '9712345678', dob: '1993-11-05', address: '78, Civil Lines, Jaipur', status: 'Active' },
-        { id: 'C004', name: 'Neha Gupta',    email: 'neha@gmail.com',     phone: '9698765432', dob: '2000-01-30', address: '90, Lake View, Bangalore', status: 'Inactive' },
-        { id: 'C005', name: 'Vikram Nair',   email: 'vikram@gmail.com',   phone: '9512349876', dob: '1990-06-18', address: '55, Brigade Road, Hyderabad', status: 'Active' },
-        { id: 'C006', name: 'Sunita Patel',  email: 'sunita@gmail.com',   phone: '9423456789', dob: '1997-09-09', address: '23, Ring Road, Pune', status: 'Active' },
-    ],
-    plans: [
-        { id: 'P001', name: 'Basic',    description: 'Basic streaming plan',   duration: 30,  durationUnit: 'Days',   price: 199,  features: ['HD Streaming'],                               status: 'Active' },
-        { id: 'P002', name: 'Standard', description: 'Standard plan',          duration: 30,  durationUnit: 'Days',   price: 399,  features: ['HD Streaming','Multiple Devices'],              status: 'Active' },
-        { id: 'P003', name: 'Premium',  description: 'Premium family plan',    duration: 90,  durationUnit: 'Days',   price: 999,  features: ['HD Streaming','Multiple Devices','Offline Download'], status: 'Active' },
-        { id: 'P004', name: 'Family',   description: 'Full family sharing',    duration: 365, durationUnit: 'Days',   price: 1499, features: ['HD Streaming','Multiple Devices','Offline Download','Family Sharing'], status: 'Inactive' },
-    ],
-    subscriptions: [
-        { id: 'S001', customerId: 'C001', customerName: 'Rahul Sharma',  planId: 'P003', planName: 'Premium', startDate: '2025-01-01', endDate: '2025-03-31', status: 'Active',   autoRenewal: true  },
-        { id: 'S002', customerId: 'C002', customerName: 'Priya Singh',   planId: 'P001', planName: 'Basic',   startDate: '2025-01-10', endDate: '2025-02-09', status: 'Active',   autoRenewal: false },
-        { id: 'S003', customerId: 'C003', customerName: 'Aman Verma',    planId: 'P002', planName: 'Standard',startDate: '2025-01-05', endDate: '2025-02-04', status: 'Expiring', autoRenewal: true  },
-        { id: 'S004', customerId: 'C004', customerName: 'Neha Gupta',    planId: 'P003', planName: 'Premium', startDate: '2025-01-15', endDate: '2025-04-14', status: 'Active',   autoRenewal: false },
-        { id: 'S005', customerId: 'C005', customerName: 'Vikram Nair',   planId: 'P004', planName: 'Family',  startDate: '2024-12-01', endDate: '2025-01-01', status: 'Inactive', autoRenewal: false },
-    ],
-    payments: [
-        { id: 'PAY001', customerId: 'C001', customerName: 'Rahul Sharma', planName: 'Premium',  subscriptionId: 'S001', amount: 999,  paymentDate: '2025-01-01', status: 'Paid'    },
-        { id: 'PAY002', customerId: 'C002', customerName: 'Priya Singh',  planName: 'Basic',    subscriptionId: 'S002', amount: 199,  paymentDate: '2025-01-10', status: 'Paid'    },
-        { id: 'PAY003', customerId: 'C003', customerName: 'Aman Verma',   planName: 'Standard', subscriptionId: 'S003', amount: 399,  paymentDate: '2025-01-05', status: 'Pending' },
-        { id: 'PAY004', customerId: 'C004', customerName: 'Neha Gupta',   planName: 'Premium',  subscriptionId: 'S004', amount: 999,  paymentDate: '2025-01-15', status: 'Failed'  },
-        { id: 'PAY005', customerId: 'C005', customerName: 'Vikram Nair',  planName: 'Family',   subscriptionId: 'S005', amount: 1499, paymentDate: '2024-12-01', status: 'Paid'    },
-        { id: 'PAY006', customerId: 'C006', customerName: 'Sunita Patel', planName: 'Standard', subscriptionId: 'S003', amount: 399,  paymentDate: '2025-01-20', status: 'Paid'    },
-    ],
-    nextId: { customer: 7, plan: 5, subscription: 6, payment: 7 }
+    customers: [],
+    plans: [],
+    subscriptions: [],
+    payments: []
 };
 
-/* ================================================================
-   ID GENERATORS
-   ================================================================ */
-function nextCustomerId()     { return 'C' + String(DB.nextId.customer++).padStart(3,'0'); }
-function nextPlanId()         { return 'P' + String(DB.nextId.plan++).padStart(3,'0'); }
-function nextSubscriptionId() { return 'S' + String(DB.nextId.subscription++).padStart(3,'0'); }
-function nextPaymentId()      { return 'PAY' + String(DB.nextId.payment++).padStart(3,'0'); }
+async function requestApi(servlet, action, values) {
+    const url = `${APP_CONTEXT}/${servlet}`;
+    const options = {
+        method: values ? 'POST' : 'GET',
+        headers: { 'Accept': 'application/json' },
+        credentials: 'same-origin'
+    };
+
+    if (values) {
+        const body = new URLSearchParams({ action });
+        Object.entries(values).forEach(([key, value]) => {
+            if (Array.isArray(value)) value.forEach(item => body.append(key, item));
+            else if (value !== undefined && value !== null) body.append(key, value);
+        });
+        options.headers['Content-Type'] = 'application/x-www-form-urlencoded;charset=UTF-8';
+        options.body = body;
+    } else {
+        options.method = 'GET';
+    }
+
+    const response = await fetch(values ? url : `${url}?action=${encodeURIComponent(action)}`, options);
+    let payload;
+    try {
+        payload = await response.json();
+    } catch (error) {
+        throw new Error('The server returned an unreadable response.');
+    }
+    if (response.status === 401) {
+        window.location.assign(`${APP_CONTEXT}/login.jsp`);
+        throw new Error('Your session has expired. Please sign in again.');
+    }
+    if (!response.ok) throw new Error(payload.error || 'The request could not be completed.');
+    return payload;
+}
+
+async function loadBackendData() {
+    const [customers, plans, subscriptions, payments] = await Promise.all([
+        requestApi('CustomerServlet', 'list'),
+        requestApi('PlanServlet', 'list'),
+        requestApi('SubscriptionServlet', 'list'),
+        requestApi('PaymentServlet', 'list')
+    ]);
+
+    DB.customers = customers.map(c => ({
+        id: String(c.id), name: c.name, email: c.email, phone: c.phone,
+        dob: c.dateOfBirth, address: c.address, status: c.status
+    }));
+    DB.plans = plans.map(p => ({
+        id: String(p.id), name: p.planName, description: p.description,
+        duration: p.duration, durationUnit: p.durationUnit, price: p.price,
+        features: p.features || [], status: p.status
+    }));
+    DB.subscriptions = subscriptions.map(s => ({
+        id: String(s.id), customerId: String(s.customer.id),
+        customerName: s.customer.name, planId: String(s.plan.id),
+        planName: s.plan.planName, startDate: s.startDate, endDate: s.endDate,
+        status: s.status, autoRenewal: s.autoRenewal
+    }));
+    DB.payments = payments.map(p => ({
+        id: String(p.id), customerId: String(p.customer.id),
+        customerName: p.customer.name, subscriptionId: String(p.subscription.id),
+        planName: p.subscription.plan.planName, amount: p.amount,
+        paymentDate: p.paymentDate, status: p.paymentStatus
+    }));
+}
+
+async function initializeBackendPage(render) {
+    try {
+        await loadBackendData();
+        render();
+    } catch (error) {
+        showToast(`Backend error: ${error.message}`, 'danger');
+    }
+}
+
+function escapeHtml(value) {
+    return String(value ?? '').replace(/[&<>"']/g, character => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+    })[character]);
+}
 
 /* ================================================================
    MODAL HELPERS
@@ -173,7 +218,10 @@ function showToast(msg, type = 'success') {
    ── DASHBOARD ──
    ================================================================ */
 function initDashboard() {
-    // Stat cards
+    initializeBackendPage(renderDashboard);
+}
+
+function renderDashboard() {
     const totalCustomers = DB.customers.length;
     const activeSubs     = DB.subscriptions.filter(s => s.status === 'Active').length;
     const totalRevenue   = DB.payments.filter(p => p.status === 'Paid').reduce((sum, p) => sum + p.amount, 0);
@@ -189,11 +237,11 @@ function initDashboard() {
     if (tbody) {
         tbody.innerHTML = DB.subscriptions.slice(0,5).map(s => `
             <tr>
-                <td class="col-id">${s.id}</td>
-                <td><div class="cell-name">${s.customerName}</div></td>
-                <td>${s.planName}</td>
-                <td>${s.startDate}</td>
-                <td>${statusBadge(s.status)}</td>
+                <td class="col-id">${escapeHtml(s.id)}</td>
+                <td><div class="cell-name">${escapeHtml(s.customerName)}</div></td>
+                <td>${escapeHtml(s.planName)}</td>
+                <td>${escapeHtml(s.startDate)}</td>
+                <td>${statusBadge(escapeHtml(s.status))}</td>
             </tr>`).join('');
     }
 }
@@ -208,8 +256,10 @@ let customerDeleteId  = null;
 let customerSearchQuery = '';
 
 function initCustomers() {
-    renderCustomerTable(DB.customers);
-    populateCustomerSelectsOnOtherPages();
+    initializeBackendPage(() => {
+        renderCustomerTable(DB.customers);
+        populateCustomerSelectsOnOtherPages();
+    });
 }
 
 function renderCustomerTable(data) {
@@ -223,11 +273,11 @@ function renderCustomerTable(data) {
     }
     tbody.innerHTML = data.map(c => `
         <tr>
-            <td class="col-id">${c.id}</td>
-            <td><div class="cell-name">${c.name}</div><div class="cell-sub">${c.email}</div></td>
-            <td>${c.email}</td>
-            <td>${c.phone}</td>
-            <td>${statusBadge(c.status)}</td>
+            <td class="col-id">${escapeHtml(c.id)}</td>
+            <td><div class="cell-name">${escapeHtml(c.name)}</div><div class="cell-sub">${escapeHtml(c.email)}</div></td>
+            <td>${escapeHtml(c.email)}</td>
+            <td>${escapeHtml(c.phone)}</td>
+            <td>${statusBadge(escapeHtml(c.status))}</td>
             <td><div class="actions-cell">
                 <button class="btn btn-sm btn-outline" onclick="openEditCustomer('${c.id}')">
                     <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
@@ -266,7 +316,7 @@ function openEditCustomer(id) {
     setInner('customer-id-display', id);
     openModal('customer-modal');
 }
-function saveCustomer() {
+async function saveCustomer() {
     const name    = document.getElementById('cf-name').value.trim();
     const email   = document.getElementById('cf-email').value.trim();
     const phone   = document.getElementById('cf-phone').value.trim();
@@ -283,17 +333,19 @@ function saveCustomer() {
     if (!address)         { showError('cf-address','Address is required'); valid = false; }
     if (!valid) return;
 
-    if (editingCustomerId) {
-        const idx = DB.customers.findIndex(x => x.id === editingCustomerId);
-        DB.customers[idx] = { id: editingCustomerId, name, email, phone, dob, address, status };
-        showToast('Customer updated successfully!');
-    } else {
-        DB.customers.push({ id: nextCustomerId(), name, email, phone, dob, address, status });
-        showToast('Customer added successfully!');
+    try {
+        const action = editingCustomerId ? 'update' : 'add';
+        await requestApi('CustomerServlet', action, {
+            id: editingCustomerId, name, email, phone, dob, address, status
+        });
+        await loadBackendData();
+        closeModal('customer-modal');
+        searchCustomers();
+        populateCustomerSelectsOnOtherPages();
+        showToast(editingCustomerId ? 'Customer updated successfully!' : 'Customer added successfully!');
+    } catch (error) {
+        showToast(error.message, 'danger');
     }
-    closeModal('customer-modal');
-    searchCustomers();
-    populateCustomerSelectsOnOtherPages();
 }
 function confirmDeleteCustomer(id) {
     customerDeleteId = id;
@@ -301,20 +353,32 @@ function confirmDeleteCustomer(id) {
     setInner('confirm-delete-name', c ? c.name : id);
     openModal('confirm-delete-modal');
 }
-function deleteCustomerConfirmed() {
+async function deleteCustomerConfirmed() {
     if (!customerDeleteId) return;
-    DB.customers = DB.customers.filter(x => x.id !== customerDeleteId);
-    customerDeleteId = null;
-    closeModal('confirm-delete-modal');
-    searchCustomers();
-    showToast('Customer deleted.', 'danger');
+    try {
+        await requestApi('CustomerServlet', 'delete', { id: customerDeleteId });
+        await loadBackendData();
+        customerDeleteId = null;
+        closeModal('confirm-delete-modal');
+        searchCustomers();
+        populateCustomerSelectsOnOtherPages();
+        showToast('Customer deleted.');
+    } catch (error) {
+        showToast(error.message, 'danger');
+    }
 }
 function searchCustomers() {
     customerSearchQuery = (document.getElementById('customer-search') || {}).value || '';
     const results = filterData(DB.customers, customerSearchQuery, ['id','name','email','phone']);
     renderCustomerTable(results);
 }
-function refreshCustomers() {
+async function refreshCustomers() {
+    try {
+        await loadBackendData();
+    } catch (error) {
+        showToast(error.message, 'danger');
+        return;
+    }
     const el = document.getElementById('customer-search'); if (el) el.value = '';
     customerSearchQuery = '';
     renderCustomerTable(DB.customers);
@@ -326,7 +390,7 @@ function populateCustomerSelectsOnOtherPages() {
         if (!sel) return;
         const cur = sel.value;
         sel.innerHTML = '<option value="">-- Select Customer --</option>' +
-            DB.customers.map(c => `<option value="${c.id}" ${c.id===cur?'selected':''}>${c.name}</option>`).join('');
+            DB.customers.map(c => `<option value="${escapeHtml(c.id)}" ${c.id===cur?'selected':''}>${escapeHtml(c.name)}</option>`).join('');
     });
 }
 
@@ -336,7 +400,12 @@ function populateCustomerSelectsOnOtherPages() {
 let editingPlanId    = null;
 let planDeleteId     = null;
 
-function initPlans() { renderPlanTable(DB.plans); populatePlanSelects(); }
+function initPlans() {
+    initializeBackendPage(() => {
+        renderPlanTable(DB.plans);
+        populatePlanSelects();
+    });
+}
 
 function renderPlanTable(data) {
     const tbody = document.getElementById('plan-tbody');
@@ -347,11 +416,11 @@ function renderPlanTable(data) {
     }
     tbody.innerHTML = data.map(p => `
         <tr>
-            <td class="col-id">${p.id}</td>
-            <td><div class="cell-name">${p.name}</div></td>
+            <td class="col-id">${escapeHtml(p.id)}</td>
+            <td><div class="cell-name">${escapeHtml(p.name)}</div></td>
             <td>${p.duration} ${p.durationUnit}</td>
             <td>₹${p.price.toLocaleString('en-IN')}</td>
-            <td>${statusBadge(p.status)}</td>
+            <td>${statusBadge(escapeHtml(p.status))}</td>
             <td><div class="actions-cell">
                 <button class="btn btn-sm btn-outline" onclick="openEditPlan('${p.id}')">
                     <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
@@ -393,7 +462,7 @@ function openEditPlan(id) {
     setInner('plan-id-display', id);
     openModal('plan-modal');
 }
-function savePlan() {
+async function savePlan() {
     const name     = document.getElementById('pf-name').value.trim();
     const desc     = document.getElementById('pf-desc').value.trim();
     const duration = document.getElementById('pf-duration').value;
@@ -412,17 +481,20 @@ function savePlan() {
     if (!isPositive(price))    { showError('pf-price',    'Price must be a positive number'); valid = false; }
     if (!valid) return;
 
-    if (editingPlanId) {
-        const idx = DB.plans.findIndex(x => x.id === editingPlanId);
-        DB.plans[idx] = { id: editingPlanId, name, description: desc, duration: Number(duration), durationUnit: unit, price: Number(price), features, status };
-        showToast('Plan updated successfully!');
-    } else {
-        DB.plans.push({ id: nextPlanId(), name, description: desc, duration: Number(duration), durationUnit: unit, price: Number(price), features, status });
-        showToast('Plan added successfully!');
+    try {
+        const action = editingPlanId ? 'update' : 'add';
+        await requestApi('PlanServlet', action, {
+            id: editingPlanId, planName: name, description: desc, duration,
+            durationUnit: unit, price, features, status
+        });
+        await loadBackendData();
+        closeModal('plan-modal');
+        searchPlans();
+        populatePlanSelects();
+        showToast(editingPlanId ? 'Plan updated successfully!' : 'Plan added successfully!');
+    } catch (error) {
+        showToast(error.message, 'danger');
     }
-    closeModal('plan-modal');
-    searchPlans();
-    populatePlanSelects();
 }
 function confirmDeletePlan(id) {
     planDeleteId = id;
@@ -431,18 +503,30 @@ function confirmDeletePlan(id) {
     openModal('confirm-delete-modal');
     window._deleteType = 'plan';
 }
-function deletePlanConfirmed() {
-    DB.plans = DB.plans.filter(x => x.id !== planDeleteId);
-    planDeleteId = null;
-    closeModal('confirm-delete-modal');
-    searchPlans();
-    showToast('Plan deleted.', 'danger');
+async function deletePlanConfirmed() {
+    try {
+        await requestApi('PlanServlet', 'delete', { id: planDeleteId });
+        await loadBackendData();
+        planDeleteId = null;
+        closeModal('confirm-delete-modal');
+        searchPlans();
+        populatePlanSelects();
+        showToast('Plan deleted.');
+    } catch (error) {
+        showToast(error.message, 'danger');
+    }
 }
 function searchPlans() {
     const q = (document.getElementById('plan-search') || {}).value || '';
     renderPlanTable(filterData(DB.plans, q, ['id','name','description']));
 }
-function refreshPlans() {
+async function refreshPlans() {
+    try {
+        await loadBackendData();
+    } catch (error) {
+        showToast(error.message, 'danger');
+        return;
+    }
     const el = document.getElementById('plan-search'); if (el) el.value = '';
     renderPlanTable(DB.plans);
 }
@@ -452,7 +536,7 @@ function populatePlanSelects() {
         if (!sel) return;
         const cur = sel.value;
         sel.innerHTML = '<option value="">-- Select Plan --</option>' +
-            DB.plans.map(p => `<option value="${p.id}" ${p.id===cur?'selected':''}>${p.name} (₹${p.price})</option>`).join('');
+            DB.plans.map(p => `<option value="${escapeHtml(p.id)}" ${p.id===cur?'selected':''}>${escapeHtml(p.name)} (₹${p.price})</option>`).join('');
     });
 }
 
@@ -463,9 +547,11 @@ let editingSubId = null;
 let subDeleteId  = null;
 
 function initSubscriptions() {
-    populateCustomerSelectsOnOtherPages();
-    populatePlanSelects();
-    renderSubTable(DB.subscriptions);
+    initializeBackendPage(() => {
+        populateCustomerSelectsOnOtherPages();
+        populatePlanSelects();
+        renderSubTable(DB.subscriptions);
+    });
 }
 function renderSubTable(data) {
     const tbody = document.getElementById('sub-tbody');
@@ -476,12 +562,12 @@ function renderSubTable(data) {
     }
     tbody.innerHTML = data.map(s => `
         <tr>
-            <td class="col-id">${s.id}</td>
-            <td><div class="cell-name">${s.customerName}</div></td>
-            <td>${s.planName}</td>
-            <td>${s.startDate}</td>
-            <td>${s.endDate}</td>
-            <td>${statusBadge(s.status)}</td>
+            <td class="col-id">${escapeHtml(s.id)}</td>
+            <td><div class="cell-name">${escapeHtml(s.customerName)}</div></td>
+            <td>${escapeHtml(s.planName)}</td>
+            <td>${escapeHtml(s.startDate)}</td>
+            <td>${escapeHtml(s.endDate)}</td>
+            <td>${statusBadge(escapeHtml(s.status))}</td>
             <td><span class="badge ${s.autoRenewal?'badge-active':'badge-inactive'}">${s.autoRenewal?'Yes':'No'}</span></td>
             <td><div class="actions-cell">
                 <button class="btn btn-sm btn-outline" onclick="openEditSub('${s.id}')">
@@ -520,7 +606,7 @@ function openEditSub(id) {
     setInner('sub-id-display', id);
     openModal('sub-modal');
 }
-function saveSub() {
+async function saveSub() {
     const customerId = document.getElementById('sf-customer').value;
     const planId     = document.getElementById('sf-plan').value;
     const startDate  = document.getElementById('sf-start').value;
@@ -537,19 +623,21 @@ function saveSub() {
     if (startDate && endDate && endDate <= startDate) { showError('sf-end','End date must be after start date'); valid = false; }
     if (!valid) return;
 
-    const customer = DB.customers.find(c => c.id === customerId);
-    const plan     = DB.plans.find(p => p.id === planId);
-
-    if (editingSubId) {
-        const idx = DB.subscriptions.findIndex(x => x.id === editingSubId);
-        DB.subscriptions[idx] = { id: editingSubId, customerId, customerName: customer?.name||'', planId, planName: plan?.name||'', startDate, endDate, status, autoRenewal };
-        showToast('Subscription updated!');
-    } else {
-        DB.subscriptions.push({ id: nextSubscriptionId(), customerId, customerName: customer?.name||'', planId, planName: plan?.name||'', startDate, endDate, status, autoRenewal });
-        showToast('Subscription added!');
+    try {
+        const action = editingSubId ? 'update' : 'add';
+        await requestApi('SubscriptionServlet', action, {
+            id: editingSubId, customerId, planId, startDate, endDate, status,
+            autoRenewal: autoRenewal ? 'true' : 'false'
+        });
+        await loadBackendData();
+        closeModal('sub-modal');
+        filterSubs();
+        populateCustomerSelectsOnOtherPages();
+        populatePlanSelects();
+        showToast(editingSubId ? 'Subscription updated!' : 'Subscription added!');
+    } catch (error) {
+        showToast(error.message, 'danger');
     }
-    closeModal('sub-modal');
-    filterSubs();
 }
 function confirmDeleteSub(id) {
     subDeleteId = id;
@@ -558,12 +646,18 @@ function confirmDeleteSub(id) {
     window._deleteType = 'sub';
     openModal('confirm-delete-modal');
 }
-function deleteSubConfirmed() {
-    DB.subscriptions = DB.subscriptions.filter(x => x.id !== subDeleteId);
-    subDeleteId = null;
-    closeModal('confirm-delete-modal');
-    filterSubs();
-    showToast('Subscription deleted.', 'danger');
+async function deleteSubConfirmed() {
+    try {
+        await requestApi('SubscriptionServlet', 'delete', { id: subDeleteId });
+        await loadBackendData();
+        subDeleteId = null;
+        closeModal('confirm-delete-modal');
+        filterSubs();
+        populateSubscriptionSelects();
+        showToast('Subscription deleted.');
+    } catch (error) {
+        showToast(error.message, 'danger');
+    }
 }
 function filterSubs() {
     const query  = (document.getElementById('sub-search') || {}).value || '';
@@ -575,7 +669,13 @@ function filterSubs() {
     if (statusF)data = data.filter(s => s.status === statusF);
     renderSubTable(data);
 }
-function refreshSubs() {
+async function refreshSubs() {
+    try {
+        await loadBackendData();
+    } catch (error) {
+        showToast(error.message, 'danger');
+        return;
+    }
     ['sub-search','sub-plan-filter','sub-status-filter'].forEach(id => { const el=document.getElementById(id); if(el) el.value=''; });
     renderSubTable(DB.subscriptions);
 }
@@ -587,17 +687,19 @@ let editingPayId = null;
 let payDeleteId  = null;
 
 function initPayments() {
-    populateCustomerSelectsOnOtherPages();
-    populatePlanSelects();
-    populateSubscriptionSelects();
-    renderPaymentTable(DB.payments);
+    initializeBackendPage(() => {
+        populateCustomerSelectsOnOtherPages();
+        populatePlanSelects();
+        populateSubscriptionSelects();
+        renderPaymentTable(DB.payments);
+    });
 }
 function populateSubscriptionSelects() {
     const sel = document.getElementById('pf-sub');
     if (!sel) return;
     const cur = sel.value;
     sel.innerHTML = '<option value="">-- Select Subscription --</option>' +
-        DB.subscriptions.map(s => `<option value="${s.id}" ${s.id===cur?'selected':''}>${s.id} – ${s.customerName} (${s.planName})</option>`).join('');
+        DB.subscriptions.map(s => `<option value="${escapeHtml(s.id)}" ${s.id===cur?'selected':''}>${escapeHtml(s.id)} – ${escapeHtml(s.customerName)} (${escapeHtml(s.planName)})</option>`).join('');
 }
 function renderPaymentTable(data) {
     const tbody = document.getElementById('payment-tbody');
@@ -608,12 +710,12 @@ function renderPaymentTable(data) {
     }
     tbody.innerHTML = data.map(p => `
         <tr>
-            <td class="col-id">${p.id}</td>
-            <td><div class="cell-name">${p.customerName}</div></td>
-            <td>${p.planName}</td>
+            <td class="col-id">${escapeHtml(p.id)}</td>
+            <td><div class="cell-name">${escapeHtml(p.customerName)}</div></td>
+            <td>${escapeHtml(p.planName)}</td>
             <td>₹${p.amount.toLocaleString('en-IN')}</td>
-            <td>${p.paymentDate}</td>
-            <td>${statusBadge(p.status)}</td>
+            <td>${escapeHtml(p.paymentDate)}</td>
+            <td>${statusBadge(escapeHtml(p.status))}</td>
             <td><div class="actions-cell">
                 <button class="btn btn-sm btn-outline" onclick="openEditPayment('${p.id}')">
                     <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
@@ -649,7 +751,7 @@ function openEditPayment(id) {
     setInner('payment-id-display', id);
     openModal('payment-modal');
 }
-function savePayment() {
+async function savePayment() {
     const customerId     = document.getElementById('pf-customer').value;
     const subscriptionId = document.getElementById('pf-sub').value;
     const amount         = document.getElementById('pf-amount').value;
@@ -665,19 +767,21 @@ function savePayment() {
     if (!status)            { showError('pf-pay-status','Status is required'); valid = false; }
     if (!valid) return;
 
-    const customer = DB.customers.find(c => c.id === customerId);
-    const sub      = DB.subscriptions.find(s => s.id === subscriptionId);
-
-    if (editingPayId) {
-        const idx = DB.payments.findIndex(x => x.id === editingPayId);
-        DB.payments[idx] = { id: editingPayId, customerId, customerName: customer?.name||'', planName: sub?.planName||'', subscriptionId, amount: Number(amount), paymentDate, status };
-        showToast('Payment updated!');
-    } else {
-        DB.payments.push({ id: nextPaymentId(), customerId, customerName: customer?.name||'', planName: sub?.planName||'', subscriptionId, amount: Number(amount), paymentDate, status });
-        showToast('Payment recorded!');
+    try {
+        const action = editingPayId ? 'update' : 'add';
+        await requestApi('PaymentServlet', action, {
+            id: editingPayId, customerId, subscriptionId, amount, paymentDate,
+            paymentStatus: status
+        });
+        await loadBackendData();
+        closeModal('payment-modal');
+        searchPayments();
+        populateCustomerSelectsOnOtherPages();
+        populateSubscriptionSelects();
+        showToast(editingPayId ? 'Payment updated!' : 'Payment recorded!');
+    } catch (error) {
+        showToast(error.message, 'danger');
     }
-    closeModal('payment-modal');
-    searchPayments();
 }
 function confirmDeletePayment(id) {
     payDeleteId = id;
@@ -686,18 +790,29 @@ function confirmDeletePayment(id) {
     window._deleteType = 'payment';
     openModal('confirm-delete-modal');
 }
-function deletePaymentConfirmed() {
-    DB.payments = DB.payments.filter(x => x.id !== payDeleteId);
-    payDeleteId = null;
-    closeModal('confirm-delete-modal');
-    searchPayments();
-    showToast('Payment deleted.', 'danger');
+async function deletePaymentConfirmed() {
+    try {
+        await requestApi('PaymentServlet', 'delete', { id: payDeleteId });
+        await loadBackendData();
+        payDeleteId = null;
+        closeModal('confirm-delete-modal');
+        searchPayments();
+        showToast('Payment deleted.');
+    } catch (error) {
+        showToast(error.message, 'danger');
+    }
 }
 function searchPayments() {
     const q = (document.getElementById('payment-search') || {}).value || '';
     renderPaymentTable(filterData(DB.payments, q, ['id','customerName','planName']));
 }
-function refreshPayments() {
+async function refreshPayments() {
+    try {
+        await loadBackendData();
+    } catch (error) {
+        showToast(error.message, 'danger');
+        return;
+    }
     const el = document.getElementById('payment-search'); if (el) el.value = '';
     renderPaymentTable(DB.payments);
 }
@@ -717,7 +832,7 @@ window._deleteType = 'customer';
 /* ================================================================
    ── REPORTS ──
    ================================================================ */
-function generateReport() {
+async function generateReport() {
     const from   = document.getElementById('rpt-from').value;
     const to     = document.getElementById('rpt-to').value;
     const type   = document.getElementById('rpt-type').value;
@@ -726,25 +841,35 @@ function generateReport() {
     if (!from) { showToast('Please select From date.','warning'); valid = false; }
     if (!to)   { showToast('Please select To date.','warning');   valid = false; }
     if (!type) { showToast('Please select report type.','warning'); valid = false; }
+    if (from && to && from > to) { showToast('From date must be before To date.','warning'); valid = false; }
     if (!valid) return;
 
     const container = document.getElementById('report-results');
     if (!container) return;
 
+    try {
+        await loadBackendData();
+    } catch (error) {
+        showToast(`Backend error: ${error.message}`, 'danger');
+        return;
+    }
+
+    const reportPayments = DB.payments.filter(p => p.paymentDate >= from && p.paymentDate <= to);
+    const reportSubscriptions = DB.subscriptions.filter(s => s.startDate >= from && s.startDate <= to);
     let html = `<div class="report-header" style="margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border-color);">
-        <strong>${type}</strong> &nbsp;|&nbsp; ${from} to ${to}
+        <strong>${escapeHtml(type)}</strong> &nbsp;|&nbsp; ${escapeHtml(from)} to ${escapeHtml(to)}
     </div>`;
 
     if (type === 'Revenue Report') {
-        const total = DB.payments.filter(p => p.status==='Paid').reduce((s,p) => s+p.amount, 0);
+        const total = reportPayments.filter(p => p.status === 'Paid').reduce((sum, p) => sum + p.amount, 0);
         html += `
         <table class="data-table">
             <thead><tr><th>Plan</th><th>Subscriptions</th><th>Revenue (₹)</th></tr></thead>
             <tbody>
             ${DB.plans.map(p => {
                 const subs = DB.subscriptions.filter(s => s.planId === p.id);
-                const rev  = DB.payments.filter(pay => subs.some(s => s.id === pay.subscriptionId) && pay.status==='Paid').reduce((s,p) => s+p.amount, 0);
-                return `<tr><td>${p.name}</td><td>${subs.length}</td><td>₹${rev.toLocaleString('en-IN')}</td></tr>`;
+                const rev  = reportPayments.filter(pay => subs.some(s => s.id === pay.subscriptionId) && pay.status === 'Paid').reduce((sum, pay) => sum + pay.amount, 0);
+                return `<tr><td>${escapeHtml(p.name)}</td><td>${subs.length}</td><td>₹${rev.toLocaleString('en-IN')}</td></tr>`;
             }).join('')}
             </tbody>
             <tfoot><tr style="font-weight:700;border-top:2px solid var(--border-color)"><td colspan="2">Total</td><td>₹${total.toLocaleString('en-IN')}</td></tr></tfoot>
@@ -754,7 +879,7 @@ function generateReport() {
         <table class="data-table">
             <thead><tr><th>Status</th><th>Count</th></tr></thead>
             <tbody>
-            ${['Active','Expiring','Inactive'].map(st => `<tr><td>${statusBadge(st)}</td><td>${DB.subscriptions.filter(s=>s.status===st).length}</td></tr>`).join('')}
+            ${['Active','Expiring','Inactive'].map(st => `<tr><td>${statusBadge(st)}</td><td>${reportSubscriptions.filter(s=>s.status===st).length}</td></tr>`).join('')}
             </tbody>
         </table>`;
     } else if (type === 'Customer Report') {
@@ -763,7 +888,7 @@ function generateReport() {
             <thead><tr><th>Customer</th><th>Email</th><th>Status</th><th>Subscriptions</th></tr></thead>
             <tbody>
             ${DB.customers.map(c => `<tr>
-                <td>${c.name}</td><td>${c.email}</td><td>${statusBadge(c.status)}</td>
+                <td>${escapeHtml(c.name)}</td><td>${escapeHtml(c.email)}</td><td>${statusBadge(escapeHtml(c.status))}</td>
                 <td>${DB.subscriptions.filter(s=>s.customerId===c.id).length}</td>
             </tr>`).join('')}
             </tbody>
@@ -773,9 +898,9 @@ function generateReport() {
         <table class="data-table">
             <thead><tr><th>Payment ID</th><th>Customer</th><th>Amount</th><th>Date</th><th>Status</th></tr></thead>
             <tbody>
-            ${DB.payments.map(p => `<tr>
-                <td class="col-id">${p.id}</td><td>${p.customerName}</td>
-                <td>₹${p.amount.toLocaleString('en-IN')}</td><td>${p.paymentDate}</td><td>${statusBadge(p.status)}</td>
+            ${reportPayments.map(p => `<tr>
+                <td class="col-id">${escapeHtml(p.id)}</td><td>${escapeHtml(p.customerName)}</td>
+                <td>₹${p.amount.toLocaleString('en-IN')}</td><td>${escapeHtml(p.paymentDate)}</td><td>${statusBadge(escapeHtml(p.status))}</td>
             </tr>`).join('')}
             </tbody>
         </table>`;

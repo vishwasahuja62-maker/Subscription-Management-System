@@ -26,8 +26,7 @@ import java.util.*;
 public class SubscriptionDAO {
 
     private Connection getConnection() throws SQLException {
-        // TODO: return DBConnection.getConnection();
-        throw new UnsupportedOperationException("JDBC not yet configured.");
+        return DBConnection.getConnection();
     }
 
     public List<Subscription> getAllSubscriptions() throws SQLException {
@@ -45,6 +44,22 @@ public class SubscriptionDAO {
         return list;
     }
 
+    public Subscription getSubscriptionById(int id) throws SQLException {
+        String sql = "SELECT s.*, c.name AS cust_name, p.plan_name "
+                + "FROM subscriptions s "
+                + "JOIN customers c ON s.customer_id = c.id "
+                + "JOIN plans p ON s.plan_id = p.id "
+                + "WHERE s.id = ?";
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            try (ResultSet rs = ps.executeQuery()) {
+                if (rs.next()) return mapRow(rs);
+            }
+        }
+        return null;
+    }
+
     public int addSubscription(Subscription sub) throws SQLException {
         String sql = "INSERT INTO subscriptions (customer_id, plan_id, start_date, end_date, status, auto_renewal) VALUES (?,?,?,?,?,?)";
         try (Connection conn = getConnection();
@@ -60,7 +75,7 @@ public class SubscriptionDAO {
                 if (keys.next()) return keys.getInt(1);
             }
         }
-        return -1;
+        throw new SQLException("The database did not return the new subscription ID.");
     }
 
     public boolean updateSubscription(Subscription sub) throws SQLException {

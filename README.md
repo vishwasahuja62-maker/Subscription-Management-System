@@ -1,25 +1,21 @@
-# Subscription Management System 🚀
+# Subscription Management System
 
-A modern, robust, and responsive web application built with **Java (Servlets & JSP)** for managing SaaS subscriptions, customer billing, and payment tracking. Designed with a premium UI/UX, featuring a fully functional dark mode and a dynamic collapsible sidebar.
+A responsive web application built with **Java (Servlets, JSP, and JDBC)** and **MySQL** for managing customers, plans, subscriptions, and payments.
 
 ## ✨ Features
 
-*   **🔑 Admin Login**: Login interface with session-based authentication structure.
+*   **Admin Login**: Session-based login with salted PBKDF2 password verification.
 *   **📊 Interactive Dashboard**: High-level metrics overview and recent activity tracking.
-*   **👥 Customer Management**: Full CRUD interface to add, edit, and manage subscriber details.
-*   **📦 Subscription Plans**: Tiered billing management (e.g., Basic, Pro, Enterprise).
-*   **💳 Payments & Billing**: Ledger for tracking transaction history and payment statuses.
-*   **🌙 Premium UI/UX**:
-    *   System-wide persistent Dark Mode (saves preference in `localStorage`).
-    *   Collapsible navigation sidebar for maximizing screen real estate.
-    *   Modern typography and micro-interactions for a snappy user experience.
-    *   Custom logo masking to eliminate JPEG background artifacts.
-
-> **Note:** The application currently utilizes an **in-memory data store** for demonstration purposes. Full JDBC/Database integration is pending.
+*   **Customer Management**: Persistent create, read, update, and delete operations.
+*   **Subscription Plans**: Persistent tier and billing management.
+*   **Subscriptions**: Persistent customer-to-plan assignments with renewal tracking.
+*   **Payments & Reports**: Persisted payment tracking and reports based on database data.
+*   **UI**: Dark mode, collapsible sidebar, and responsive pages.
 
 ## 🛠️ Tech Stack
 
-*   **Backend**: Java 11+, Java Servlets, JSP (JavaServer Pages)
+*   **Backend**: Java 11+, Java Servlets, JSP (JavaServer Pages), JDBC
+*   **Database**: MySQL 8+
 *   **Frontend**: HTML5, CSS3 (Custom variables, Flexbox/Grid), Vanilla JavaScript
 *   **Server**: Apache Tomcat 9.0+
 *   **IDE**: IntelliJ IDEA (Configured with SmartTomcat)
@@ -46,14 +42,42 @@ A modern, robust, and responsive web application built with **Java (Servlets & J
     *   Set the **Deployment directory** to `src/main/webapp`.
     *   Set the **Context path** to `/` (or `/subscription-management-system`).
 
-3.  **Run the Application**:
+3.  **Create the database**:
+    *   Install and start MySQL 8 or later.
+    *   Run `src/main/resources/db/schema.sql` in MySQL Workbench or with the MySQL command line.
+    *   Configure the following environment variables for the Tomcat run configuration:
+        *   `SMS_DB_URL` (optional; defaults to `jdbc:mysql://localhost:3306/subscription_management?useSSL=false&serverTimezone=UTC`)
+        *   `SMS_DB_USERNAME` (required)
+        *   `SMS_DB_PASSWORD` (required)
+    *   Never commit database credentials to GitHub.
+
+4.  **Configure database credentials** in the Tomcat run configuration:
+    *   Set `SMS_DB_USERNAME` to a MySQL user with access to `subscription_management`.
+    *   Set `SMS_DB_PASSWORD` to that user's password.
+    *   Optionally set `SMS_DB_URL` if MySQL is not at the default local URL.
+    *   Never commit database credentials to GitHub.
+
+5.  **Create the first admin user**:
+    ```bash
+    mvn compile
+    java -cp target/classes com.subscription.security.PasswordUtil
+    ```
+    Enter a password of at least 12 characters in the terminal. The tool prints a salt and hash; use them in this SQL statement:
+    ```sql
+    INSERT INTO users (username, password_hash, password_salt, role, email)
+    VALUES ('admin', '<hash printed by PasswordUtil>', '<salt printed by PasswordUtil>',
+            'Admin', 'admin@example.com');
+    ```
+    Do not put a plain-text password in the database or source control.
+
+6.  **Build and run the application**:
+    ```bash
+    mvn clean package
+    ```
     *   Click the **Play/Run** button in IntelliJ.
     *   Navigate to `http://localhost:8080/login.jsp` in your web browser.
 
-### Default Credentials
-For demonstration purposes, you can use the following default credentials (if configured in your Servlet logic):
-*   **Username**: `admin`
-*   **Password**: `admin123`
+There are no default login credentials; the admin account must be created during setup.
 
 ## 📁 Project Structure
 

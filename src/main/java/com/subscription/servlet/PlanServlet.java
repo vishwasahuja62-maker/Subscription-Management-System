@@ -1,82 +1,156 @@
 package com.subscription.servlet;
 
+import com.subscription.dao.PlanDAO;
 import com.subscription.model.Plan;
-// import com.subscription.dao.PlanDAO;   // ← uncomment in JDBC phase
+import java.io.IOException;
+import java.sql.SQLException;
+import java.sql.SQLIntegrityConstraintViolationException;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
-import javax.servlet.http.*;
-import java.io.IOException;
-import java.util.*;
+import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 
-/**
- * PlanServlet — CRUD operations for Subscription Plans.
- *
- * GET  /PlanServlet?action=list            → list all plans
- * POST /PlanServlet?action=add             → add new plan
- * POST /PlanServlet?action=update          → update plan
- * POST /PlanServlet?action=delete&id=X    → delete plan
- */
 @WebServlet("/PlanServlet")
 public class PlanServlet extends HttpServlet {
 
     private static final long serialVersionUID = 1L;
-
-    private static final List<Plan> samplePlans = new ArrayList<>();
-
-    static {
-        samplePlans.add(new Plan(1, "Basic",    "Basic streaming",        30,  "Days", 199,  Arrays.asList("HD Streaming"),                                          "Active"));
-        samplePlans.add(new Plan(2, "Standard", "Standard plan",          30,  "Days", 399,  Arrays.asList("HD Streaming","Multiple Devices"),                       "Active"));
-        samplePlans.add(new Plan(3, "Premium",  "Premium family plan",    90,  "Days", 999,  Arrays.asList("HD Streaming","Multiple Devices","Offline Download"),    "Active"));
-        samplePlans.add(new Plan(4, "Family",   "Full family sharing",    365, "Days", 1499, Arrays.asList("HD Streaming","Multiple Devices","Offline Download","Family Sharing"), "Inactive"));
-    }
+    private final PlanDAO planDAO = new PlanDAO();
 
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse res)
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        // ── TODO: List<Plan> plans = new PlanDAO().getAllPlans();
-        req.setAttribute("plans", samplePlans);
-        req.getRequestDispatcher("/WEB-INF/views/plans.jsp").forward(req, res);
-    }
-
-    @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse res)
-            throws ServletException, IOException {
-        String action = req.getParameter("action");
-        req.setCharacterEncoding("UTF-8");
-
-        if ("add".equals(action)) {
-            Plan p = buildFromRequest(req, -1);
-            // ── TODO: new PlanDAO().addPlan(p);
-            samplePlans.add(p);
-
-        } else if ("update".equals(action)) {
-            int id = Integer.parseInt(req.getParameter("id"));
-            Plan updated = buildFromRequest(req, id);
-            // ── TODO: new PlanDAO().updatePlan(updated);
-            for (int i = 0; i < samplePlans.size(); i++) {
-                if (samplePlans.get(i).getId() == id) { samplePlans.set(i, updated); break; }
+        try {
+            List<Plan> plans = planDAO.getAllPlans();
+            if (ServletSupport.wantsJson(request)) {
+                ServletSupport.writeJson(response, HttpServletResponse.SC_OK, plans);
+                return;
             }
-
-        } else if ("delete".equals(action)) {
-            int id = Integer.parseInt(req.getParameter("id"));
-            // ── TODO: new PlanDAO().deletePlan(id);
-            samplePlans.removeIf(p -> p.getId() == id);
+            request.setAttribute("plans", plans);
+            request.getRequestDispatcher("/WEB-INF/views/plans.jsp").forward(request, response);
+        } catch (SQLException e) {
+            log("Unable to load plans.", e);
+            ServletSupport.writeError(
+                    request, response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                    "Could not load plans.");
         }
-        res.sendRedirect(req.getContextPath() + "/PlanServlet");
     }
 
-    private Plan buildFromRequest(HttpServletRequest req, int id) {
-        Plan p = new Plan();
-        p.setId(id == -1 ? samplePlans.size() + 1 : id);
-        p.setPlanName(req.getParameter("planName"));
-        p.setDescription(req.getParameter("description"));
-        p.setDuration(Integer.parseInt(req.getParameter("duration")));
-        p.setDurationUnit(req.getParameter("durationUnit"));
-        p.setPrice(Double.parseDouble(req.getParameter("price")));
-        p.setStatus(req.getParameter("status"));
-        // Features from checkboxes
-        String[] features = req.getParameterValues("features");
-        p.setFeatures(features != null ? Arrays.asList(features) : new ArrayList<>());
-        return p;
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        request.setCharacterEncoding("UTF-8");
+        String action = request.getParameter("action");
+        try {
+            if ("add".equals(action)) {
+                Plan plan = buildPlan(request);
+                plan.setId(planDAO.addPlan(plan));
+                respondSuccess(request, response, "Plan added.", plan.getId());
+            } else if ("update".equals(action)) {
+                Plan plan = buildPlan(request);
+                plan.setId(ServletSupport.requiredId(request));
+                if (!planDAO.updatePlan(plan)) {
+                    ServletSupport.writeError(request, response, HttpServletResponse.SC_NOT_FOUND,
+                            "Plan was not found.");
+                    return;
+                }
+                respondSuccess(request, response, "Plan updated.", plan.getId());
+            } else if ("delete".equals(action)) {
+                if (!planDAO.deletePlan(ServletSupport.requiredId(request))) {
+                    ServletSupport.writeError(request, response, HttpServletResponse.SC_NOT_FOUND,
+                            "Plan was not found.");
+                    return;
+                }
+                respondSuccess(request, response, "Plan deleted.", null);
+            } else {
+                ServletSupport.writeError(request, response, HttpServletResponse.SC_BAD_REQUEST,
+                        "Unsupported plan action.");
+            }
+        } catch (IllegalArgumentException e) {
+            ServletSupport.writeError(
+                    request, response, HttpServletResponse.SC_BAD_REQUEST, e.getMessage());
+        } catch (SQLIntegrityConstraintViolationException e) {
+            ServletSupport.writeError(request, response, HttpServletResponse.SC_CONFLICT,
+                    "This plan is used by subscriptions and cannot be deleted.");
+        } catch (SQLException e) {
+            log("Unable to save plan.", e);
+            ServletSupport.writeError(
+                    request, response, HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                    "Could not save plan.");
+        }
+    }
+
+    private Plan buildPlan(HttpServletRequest request) {
+        Plan plan = new Plan();
+        plan.setPlanName(ServletSupport.required(request, "planName"));
+        if (plan.getPlanName().length() > 100) {
+            throw new IllegalArgumentException("Plan name must be 100 characters or fewer.");
+        }
+        plan.setDescription(request.getParameter("description"));
+        plan.setDuration(parsePositiveInt(ServletSupport.required(request, "duration"), "duration"));
+        plan.setDurationUnit(ServletSupport.required(request, "durationUnit"));
+        plan.setPrice(parsePositiveDouble(ServletSupport.required(request, "price"), "price"));
+        if (plan.getPrice() > 99999999.99) {
+            throw new IllegalArgumentException("Price exceeds the supported maximum.");
+        }
+        plan.setStatus(ServletSupport.required(request, "status"));
+        String[] features = request.getParameterValues("features");
+        plan.setFeatures(features == null ? new ArrayList<>() : Arrays.asList(features));
+        List<String> allowedFeatures = Arrays.asList(
+                "HD Streaming", "Multiple Devices", "Offline Download", "Family Sharing");
+        if (!allowedFeatures.containsAll(plan.getFeatures())) {
+            throw new IllegalArgumentException("One or more selected plan features are invalid.");
+        }
+
+        if (!Arrays.asList("Days", "Months", "Years").contains(plan.getDurationUnit())) {
+            throw new IllegalArgumentException("Invalid plan duration unit.");
+        }
+        if (!Arrays.asList("Active", "Inactive").contains(plan.getStatus())) {
+            throw new IllegalArgumentException("Invalid plan status.");
+        }
+        return plan;
+    }
+
+    private int parsePositiveInt(String value, String field) {
+        try {
+            int parsed = Integer.parseInt(value);
+            if (parsed > 0) {
+                return parsed;
+            }
+        } catch (NumberFormatException ignored) {
+            // Return a client-facing validation error below.
+        }
+        throw new IllegalArgumentException(field + " must be a positive whole number.");
+    }
+
+    private double parsePositiveDouble(String value, String field) {
+        try {
+            double parsed = Double.parseDouble(value);
+            if (Double.isFinite(parsed) && parsed > 0) {
+                return parsed;
+            }
+        } catch (NumberFormatException ignored) {
+            // Return a client-facing validation error below.
+        }
+        throw new IllegalArgumentException(field + " must be a positive number.");
+    }
+
+    private void respondSuccess(HttpServletRequest request, HttpServletResponse response,
+                                String message, Integer id) throws IOException {
+        if (ServletSupport.wantsJson(request)) {
+            Map<String, Object> result = new HashMap<>();
+            result.put("message", message);
+            if (id != null) {
+                result.put("id", id);
+            }
+            ServletSupport.writeJson(response, HttpServletResponse.SC_OK, result);
+        } else {
+            response.sendRedirect(request.getContextPath() + "/PlanServlet");
+        }
     }
 }

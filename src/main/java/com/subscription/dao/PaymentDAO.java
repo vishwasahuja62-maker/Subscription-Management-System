@@ -25,13 +25,12 @@ import java.util.*;
 public class PaymentDAO {
 
     private Connection getConnection() throws SQLException {
-        // TODO: return DBConnection.getConnection();
-        throw new UnsupportedOperationException("JDBC not yet configured.");
+        return DBConnection.getConnection();
     }
 
     public List<Payment> getAllPayments() throws SQLException {
         List<Payment> list = new ArrayList<>();
-        String sql = "SELECT pay.*, c.name AS cust_name, p.plan_name " +
+        String sql = "SELECT pay.*, c.name AS cust_name, s.plan_id, p.plan_name " +
                      "FROM payments pay " +
                      "JOIN customers    c ON pay.customer_id     = c.id " +
                      "JOIN subscriptions s ON pay.subscription_id = s.id " +
@@ -59,7 +58,7 @@ public class PaymentDAO {
                 if (keys.next()) return keys.getInt(1);
             }
         }
-        return -1;
+        throw new SQLException("The database did not return the new payment ID.");
     }
 
     public boolean updatePayment(Payment pay) throws SQLException {
@@ -101,6 +100,13 @@ public class PaymentDAO {
         pay.setId(rs.getInt("id"));
         Customer c = new Customer(); c.setId(rs.getInt("customer_id")); c.setName(rs.getString("cust_name"));
         pay.setCustomer(c);
+        Subscription subscription = new Subscription();
+        subscription.setId(rs.getInt("subscription_id"));
+        Plan plan = new Plan();
+        plan.setId(rs.getInt("plan_id"));
+        plan.setPlanName(rs.getString("plan_name"));
+        subscription.setPlan(plan);
+        pay.setSubscription(subscription);
         pay.setAmount(rs.getDouble("amount"));
         pay.setPaymentDate(rs.getString("payment_date"));
         pay.setPaymentStatus(rs.getString("payment_status"));

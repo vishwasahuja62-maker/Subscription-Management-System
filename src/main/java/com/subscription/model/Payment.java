@@ -2,7 +2,7 @@ package com.subscription.model;
 
 /**
  * JavaBean representing a Payment record.
- * Maps to the 'payments' table in MySQL (future JDBC phase).
+ * Maps to the 'payments' table in MySQL.
  *
  * Relationships:
  *   payments.customer_id     → customers.id

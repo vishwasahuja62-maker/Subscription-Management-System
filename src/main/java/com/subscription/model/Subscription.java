@@ -2,7 +2,7 @@ package com.subscription.model;
 
 /**
  * JavaBean representing a Customer Subscription.
- * Maps to the 'subscriptions' table in MySQL (future JDBC phase).
+ * Maps to the 'subscriptions' table in MySQL.
  *
  * Relationships:
  *   subscriptions.customer_id → customers.id

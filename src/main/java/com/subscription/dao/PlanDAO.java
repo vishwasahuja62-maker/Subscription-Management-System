@@ -25,8 +25,7 @@ import java.util.*;
 public class PlanDAO {
 
     private Connection getConnection() throws SQLException {
-        // TODO: return DBConnection.getConnection();
-        throw new UnsupportedOperationException("JDBC not yet configured.");
+        return DBConnection.getConnection();
     }
 
     public List<Plan> getAllPlans() throws SQLException {
@@ -68,7 +67,7 @@ public class PlanDAO {
                 if (keys.next()) return keys.getInt(1);
             }
         }
-        return -1;
+        throw new SQLException("The database did not return the new plan ID.");
     }
 
     public boolean updatePlan(Plan p) throws SQLException {

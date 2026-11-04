@@ -9,7 +9,7 @@ import java.util.List;
  * CustomerDAO — Data Access Object for the Customer entity.
  *
  * All methods use JDBC to interact with the 'customers' MySQL table.
- * Replace the DBConnection usage with your actual connection utility in the JDBC phase.
+ * Connections are supplied by DBConnection using environment configuration.
  *
  * SQL schema (reference):
  * ──────────────────────────────────────────────────────────────────
@@ -27,10 +27,8 @@ import java.util.List;
  */
 public class CustomerDAO {
 
-    // ── Connection helper (implement DBConnection in JDBC phase) ──
     private Connection getConnection() throws SQLException {
-        // TODO: return DBConnection.getConnection();
-        throw new UnsupportedOperationException("JDBC not yet configured. Implement DBConnection first.");
+        return DBConnection.getConnection();
     }
 
     /**
@@ -83,7 +81,7 @@ public class CustomerDAO {
                 if (keys.next()) return keys.getInt(1);
             }
         }
-        return -1;
+        throw new SQLException("The database did not return the new customer ID.");
     }
 
     /**

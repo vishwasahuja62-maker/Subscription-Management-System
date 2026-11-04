@@ -5,7 +5,7 @@ import java.util.ArrayList;
 
 /**
  * JavaBean representing a Subscription Plan.
- * Maps to the 'plans' table in MySQL (future JDBC phase).
+ * Maps to the 'plans' table in MySQL.
  */
 public class Plan {
 

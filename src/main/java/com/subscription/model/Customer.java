@@ -2,7 +2,7 @@ package com.subscription.model;
 
 /**
  * JavaBean representing a Customer.
- * Maps to the 'customers' table in MySQL (future JDBC phase).
+ * Maps to the 'customers' table in MySQL.
  */
 public class Customer {
 
