@@ -25,14 +25,15 @@ A responsive web application built with **Java (Servlets, JSP, and JDBC)** and *
 ### Prerequisites
 *   [Java Development Kit (JDK) 11 or higher](https://www.oracle.com/java/technologies/javase-downloads.html)
 *   [Apache Tomcat 9.0+](https://tomcat.apache.org/download-90.cgi)
+*   MySQL 8 or later
 *   IntelliJ IDEA (Ultimate or Community with SmartTomcat plugin)
 
 ### Installation
 
 1.  **Clone the repository**:
     ```bash
-    git clone https://github.com/yourusername/subscription-management-system.git
-    cd subscription-management-system
+    git clone https://github.com/vishwasahuja62-maker/Subscription-Management-System.git
+    cd Subscription-Management-System
     ```
 
 2.  **Configure Tomcat in IntelliJ**:
@@ -45,11 +46,6 @@ A responsive web application built with **Java (Servlets, JSP, and JDBC)** and *
 3.  **Create the database**:
     *   Install and start MySQL 8 or later.
     *   Run `src/main/resources/db/schema.sql` in MySQL Workbench or with the MySQL command line.
-    *   Configure the following environment variables for the Tomcat run configuration:
-        *   `SMS_DB_URL` (optional; defaults to `jdbc:mysql://localhost:3306/subscription_management?useSSL=false&serverTimezone=UTC`)
-        *   `SMS_DB_USERNAME` (required)
-        *   `SMS_DB_PASSWORD` (required)
-    *   Never commit database credentials to GitHub.
 
 4.  **Configure database credentials** in the Tomcat run configuration:
     *   Set `SMS_DB_USERNAME` to a MySQL user with access to `subscription_management`.
@@ -75,7 +71,7 @@ A responsive web application built with **Java (Servlets, JSP, and JDBC)** and *
     mvn clean package
     ```
     *   Click the **Play/Run** button in IntelliJ.
-    *   Navigate to `http://localhost:8080/login.jsp` in your web browser.
+    *   Navigate to `/login.jsp` under the context path configured for Tomcat (for example, `http://localhost:8080/login.jsp` for `/`, or `http://localhost:8080/sms/login.jsp` with the Maven Tomcat plugin).
 
 There are no default login credentials; the admin account must be created during setup.
 
@@ -85,9 +81,8 @@ There are no default login credentials; the admin account must be created during
 Subscription-Management-System/
 ├── src/
 │   └── main/
-│       ├── java/com/subscription/servlet/  # Backend Java Servlets
+│       ├── java/com/subscription/          # Models, JDBC DAOs, security, and servlets
 │       │   ├── CustomerServlet.java
-│       │   ├── DashboardServlet.java
 │       │   ├── LoginServlet.java
 │       │   └── ...
 │       └── webapp/                         # Frontend Assets & Views
@@ -96,13 +91,13 @@ Subscription-Management-System/
 │           ├── images/                     # Logos and assets
 │           ├── WEB-INF/views/              # Secure JSP pages and fragments (sidebar.jspf)
 │           └── login.jsp                   # Public login page
-└── pom.xml (if Maven is used) / lib/       # Dependencies
+└── pom.xml                                 # Maven dependencies and WAR build
 ```
 
 ## 🤝 Contributing
 
 Contributions, issues, and feature requests are welcome!
-Feel free to check [issues page](https://github.com/yourusername/subscription-management-system/issues).
+Feel free to check the [issues page](https://github.com/vishwasahuja62-maker/Subscription-Management-System/issues).
 
 ## 📝 License
 
