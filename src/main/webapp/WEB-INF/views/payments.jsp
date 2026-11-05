@@ -208,6 +208,28 @@
     </div>
 </div>
 
+<!-- ── Invoice Modal ── -->
+<div class="modal-overlay" id="invoice-modal" role="dialog" aria-modal="true">
+    <div class="modal modal-md">
+        <div class="modal-header">
+            <h2 class="modal-title">Payment Invoice</h2>
+            <button class="modal-close" onclick="closeModal('invoice-modal')" aria-label="Close modal">&times;</button>
+        </div>
+        <div class="modal-body" id="invoice-content" style="padding:20px; font-family:inherit;">
+            <!-- Rendered dynamically -->
+        </div>
+        <div class="modal-footer" style="justify-content:space-between;">
+            <button class="btn btn-secondary" onclick="closeModal('invoice-modal')">Close</button>
+            <button class="btn btn-primary" onclick="printInvoice()">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                </svg>
+                Print / Save PDF
+            </button>
+        </div>
+    </div>
+</div>
+
 <!-- ── Shared Confirm Delete Modal ── -->
 <div class="modal-overlay" id="confirm-delete-modal" role="dialog" aria-modal="true">
     <div class="modal modal-sm">

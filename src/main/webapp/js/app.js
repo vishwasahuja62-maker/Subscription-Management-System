@@ -717,6 +717,10 @@ function renderPaymentTable(data) {
             <td>${escapeHtml(p.paymentDate)}</td>
             <td>${statusBadge(escapeHtml(p.status))}</td>
             <td><div class="actions-cell">
+                <button class="btn btn-sm btn-outline" onclick="viewInvoice('${p.id}')" title="View & Download Invoice">
+                    <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+                    Invoice
+                </button>
                 <button class="btn btn-sm btn-outline" onclick="openEditPayment('${p.id}')">
                     <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                     Edit
@@ -909,6 +913,139 @@ async function generateReport() {
     container.innerHTML = html;
     container.style.display = 'block';
     showToast('Report generated successfully!');
+}
+
+function viewInvoice(id) {
+    const payment = DB.payments.find(p => p.id === id);
+    if (!payment) return;
+    const sub = DB.subscriptions.find(s => s.id === payment.subscriptionId);
+    const customer = DB.customers.find(c => c.id === payment.customerId);
+    const plan = DB.plans.find(p => p.name === payment.planName);
+
+    const invoiceHtml = `
+        <div style="border-bottom: 2px solid var(--border-color); padding-bottom: 12px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <h2 style="margin: 0; color: var(--color-primary); font-size: 1.4rem;">INVOICE</h2>
+                <div style="color: var(--text-muted); font-size: 0.85rem;">Invoice #: INV-${escapeHtml(payment.id.padStart(5, '0'))}</div>
+                <div style="color: var(--text-muted); font-size: 0.85rem;">Date: ${escapeHtml(payment.paymentDate)}</div>
+            </div>
+            <div style="text-align: right;">
+                <strong style="font-size: 1.1rem;">Subscription MS</strong>
+                <div style="font-size: 0.85rem; color: var(--text-muted);">support@subscriptionms.com</div>
+            </div>
+        </div>
+
+        <div style="display: flex; justify-content: space-between; margin-bottom: 20px; font-size: 0.9rem;">
+            <div>
+                <strong>Billed To:</strong>
+                <div>${escapeHtml(payment.customerName)}</div>
+                <div style="color: var(--text-secondary);">${escapeHtml(customer?.email || '')}</div>
+                <div style="color: var(--text-secondary);">${escapeHtml(customer?.phone || '')}</div>
+                <div style="color: var(--text-secondary);">${escapeHtml(customer?.address || '')}</div>
+            </div>
+            <div style="text-align: right;">
+                <strong>Payment Details:</strong>
+                <div>Status: ${statusBadge(escapeHtml(payment.status))}</div>
+                <div style="color: var(--text-secondary);">Subscription ID: #${escapeHtml(payment.subscriptionId)}</div>
+                <div style="color: var(--text-secondary);">Plan: ${escapeHtml(payment.planName)}</div>
+            </div>
+        </div>
+
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 0.9rem;">
+            <thead>
+                <tr style="border-bottom: 2px solid var(--border-color); text-align: left;">
+                    <th style="padding: 8px 4px;">Description</th>
+                    <th style="padding: 8px 4px; text-align: right;">Amount</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr style="border-bottom: 1px solid var(--border-color);">
+                    <td style="padding: 10px 4px;">
+                        <strong>${escapeHtml(payment.planName)} Subscription</strong>
+                        <div style="font-size: 0.8rem; color: var(--text-muted);">
+                            Duration: ${sub ? `${escapeHtml(sub.startDate)} to ${escapeHtml(sub.endDate)}` : 'Standard'}
+                        </div>
+                    </td>
+                    <td style="padding: 10px 4px; text-align: right; font-weight: 600;">₹${payment.amount.toLocaleString('en-IN')}</td>
+                </tr>
+            </tbody>
+            <tfoot>
+                <tr>
+                    <td style="padding: 12px 4px; font-weight: 700; font-size: 1rem;">Total Paid</td>
+                    <td style="padding: 12px 4px; text-align: right; font-weight: 700; font-size: 1.1rem; color: var(--color-primary);">₹${payment.amount.toLocaleString('en-IN')}</td>
+                </tr>
+            </tfoot>
+        </table>
+        <div style="font-size: 0.8rem; color: var(--text-muted); text-align: center; border-top: 1px dashed var(--border-color); padding-top: 12px;">
+            Thank you for your business! This is a computer-generated invoice.
+        </div>
+    `;
+
+    document.getElementById('invoice-content').innerHTML = invoiceHtml;
+    openModal('invoice-modal');
+}
+
+function printInvoice() {
+    const printContents = document.getElementById('invoice-content').innerHTML;
+    const printWindow = window.open('', '', 'height=600,width=800');
+    printWindow.document.write(`
+        <html>
+            <head>
+                <title>Invoice</title>
+                <style>
+                    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; padding: 30px; color: #1e293b; }
+                    .badge { display: inline-block; padding: 2px 8px; border-radius: 9999px; font-size: 12px; font-weight: 600; text-transform: uppercase; }
+                    .badge-active { background: #dcfce7; color: #15803d; }
+                    .badge-paid { background: #dcfce7; color: #15803d; }
+                    .badge-pending { background: #fef9c3; color: #a16207; }
+                    .badge-failed { background: #fee2e2; color: #b91c1c; }
+                    @media print { body { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
+                </style>
+            </head>
+            <body>
+                ${printContents}
+            </body>
+        </html>
+    `);
+    printWindow.document.close();
+    printWindow.focus();
+    setTimeout(() => {
+        printWindow.print();
+        printWindow.close();
+    }, 250);
+}
+
+function exportReportToCSV() {
+    const table = document.querySelector('#report-results table');
+    if (!table) {
+        showToast('Please generate a report first before exporting.', 'warning');
+        return;
+    }
+
+    const type = document.getElementById('rpt-type')?.value || 'report';
+    const from = document.getElementById('rpt-from')?.value || '';
+    const to = document.getElementById('rpt-to')?.value || '';
+
+    const rows = Array.from(table.querySelectorAll('tr'));
+    const csvContent = rows.map(row => {
+        const cells = Array.from(row.querySelectorAll('th, td'));
+        return cells.map(cell => {
+            let text = cell.innerText.trim().replace(/"/g, '""');
+            return `"${text}"`;
+        }).join(',');
+    }).join('\r\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    const filename = `${type.replace(/\s+/g, '_').toLowerCase()}_${from}_${to}.csv`;
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast('Report exported as CSV successfully!');
 }
 
 /* ================================================================
