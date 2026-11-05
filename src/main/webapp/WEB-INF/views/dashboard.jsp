@@ -137,6 +137,36 @@
 
             </section>
 
+            <!-- ── Expiring Soon Alert Banner / Section ── -->
+            <div class="card" id="expiring-alert-card" style="display:none; margin-bottom: 24px; border-left: 5px solid var(--color-warning);">
+                <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <span style="font-size:1.4rem;">⚠️</span>
+                        <div>
+                            <h2 class="card-title" style="margin:0; font-size:1.15rem; color:var(--text-primary);">Expiring Soon Alerts (Next 7 Days)</h2>
+                            <p class="page-subtitle" style="margin:2px 0 0 0;">Subscriptions that require immediate renewal or reminder follow-up</p>
+                        </div>
+                    </div>
+                    <span class="badge badge-pending" id="expiring-badge" style="font-weight:700;">0 Expiring</span>
+                </div>
+                <div class="table-wrapper" style="border:none;box-shadow:none;border-radius:0;">
+                    <table class="data-table" aria-label="Expiring subscriptions table">
+                        <thead>
+                            <tr>
+                                <th>Customer</th>
+                                <th>Plan</th>
+                                <th>Expires On</th>
+                                <th>Days Left</th>
+                                <th style="text-align:right;">Quick Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="expiring-tbody">
+                            <!-- Injected dynamically -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
             <!-- ── Recent Activity ── -->
             <div class="card" role="region" aria-label="Recent activity">
                 <div class="card-header">

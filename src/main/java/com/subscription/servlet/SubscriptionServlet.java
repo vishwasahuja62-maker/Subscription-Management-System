@@ -70,6 +70,21 @@ public class SubscriptionServlet extends HttpServlet {
                     return;
                 }
                 respondSuccess(request, response, "Subscription deleted.", null);
+            } else if ("renew".equals(action)) {
+                int id = ServletSupport.requiredId(request);
+                int days = 30; // default 30 days renewal
+                String daysParam = request.getParameter("days");
+                if (daysParam != null && !daysParam.trim().isEmpty()) {
+                    try {
+                        days = Integer.parseInt(daysParam);
+                    } catch (NumberFormatException ignored) {}
+                }
+                if (!subscriptionDAO.renewSubscription(id, days)) {
+                    ServletSupport.writeError(request, response, HttpServletResponse.SC_NOT_FOUND,
+                            "Subscription was not found.");
+                    return;
+                }
+                respondSuccess(request, response, "Subscription renewed successfully by " + days + " days.", id);
             } else {
                 ServletSupport.writeError(request, response, HttpServletResponse.SC_BAD_REQUEST,
                         "Unsupported subscription action.");

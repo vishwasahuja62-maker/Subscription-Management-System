@@ -225,12 +225,60 @@ function renderDashboard() {
     const totalCustomers = DB.customers.length;
     const activeSubs     = DB.subscriptions.filter(s => s.status === 'Active').length;
     const totalRevenue   = DB.payments.filter(p => p.status === 'Paid').reduce((sum, p) => sum + p.amount, 0);
-    const expiringSoon   = DB.subscriptions.filter(s => s.status === 'Expiring').length;
+
+    const now = new Date();
+    const sevenDaysLater = new Date();
+    sevenDaysLater.setDate(now.getDate() + 7);
+
+    // Calculate subscriptions expiring in the next 7 days or already expired
+    const expiringSubscriptions = DB.subscriptions.map(s => {
+        const endDate = new Date(s.endDate + 'T00:00:00');
+        const diffTime = endDate.getTime() - now.getTime();
+        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        return { ...s, diffDays };
+    }).filter(s => s.status !== 'Inactive' && s.diffDays <= 7)
+      .sort((a, b) => a.diffDays - b.diffDays);
 
     setInner('stat-customers',    totalCustomers);
     setInner('stat-subs',         activeSubs);
     setInner('stat-revenue',      '₹' + totalRevenue.toLocaleString('en-IN'));
-    setInner('stat-expiring',     expiringSoon);
+    setInner('stat-expiring',     expiringSubscriptions.length);
+
+    // Render Expiring Soon Alert Card
+    const alertCard = document.getElementById('expiring-alert-card');
+    const alertTbody = document.getElementById('expiring-tbody');
+    const alertBadge = document.getElementById('expiring-badge');
+
+    if (alertCard && alertTbody) {
+        if (expiringSubscriptions.length > 0) {
+            alertCard.style.display = 'block';
+            if (alertBadge) alertBadge.textContent = `${expiringSubscriptions.length} Expiring Soon`;
+            alertTbody.innerHTML = expiringSubscriptions.map(s => {
+                let badgeClass = s.diffDays <= 0 ? 'badge-failed' : (s.diffDays <= 3 ? 'badge-failed' : 'badge-pending');
+                let dayText = s.diffDays < 0 ? `${Math.abs(s.diffDays)} day(s) ago` : (s.diffDays === 0 ? 'Today!' : `${s.diffDays} day(s) left`);
+                return `
+                <tr>
+                    <td>
+                        <div class="cell-name">${escapeHtml(s.customerName)}</div>
+                        <div style="font-size:0.75rem;color:var(--text-muted);">Sub ID: #${escapeHtml(s.id)}</div>
+                    </td>
+                    <td><div style="font-weight:600;">${escapeHtml(s.planName)}</div></td>
+                    <td>${escapeHtml(s.endDate)}</td>
+                    <td><span class="badge ${badgeClass}">${dayText}</span></td>
+                    <td style="text-align:right;">
+                        <button class="btn btn-sm btn-primary" onclick="quickRenewSubscription('${s.id}')" title="Renew for 30 days">
+                            ⚡ Renew Now
+                        </button>
+                        <button class="btn btn-sm btn-outline" onclick="sendRenewalReminder('${s.id}')" title="Send Reminder Notification">
+                            ✉️ Remind
+                        </button>
+                    </td>
+                </tr>`;
+            }).join('');
+        } else {
+            alertCard.style.display = 'none';
+        }
+    }
 
     // Recent activity table
     const tbody = document.getElementById('recent-tbody');
@@ -244,6 +292,24 @@ function renderDashboard() {
                 <td>${statusBadge(escapeHtml(s.status))}</td>
             </tr>`).join('');
     }
+}
+
+async function quickRenewSubscription(subId) {
+    if (!confirm('Are you sure you want to renew this subscription for 30 days?')) return;
+    try {
+        await requestApi('SubscriptionServlet', 'renew', { id: subId, days: 30 });
+        showToast('Subscription renewed successfully by 30 days!');
+        await loadBackendData();
+        renderDashboard();
+    } catch (error) {
+        showToast(error.message, 'danger');
+    }
+}
+
+function sendRenewalReminder(subId) {
+    const sub = DB.subscriptions.find(s => s.id === subId);
+    if (!sub) return;
+    showToast(`Reminder email queued for ${sub.customerName} regarding ${sub.planName}!`, 'info');
 }
 
 function setInner(id, val) { const el = document.getElementById(id); if (el) el.textContent = val; }

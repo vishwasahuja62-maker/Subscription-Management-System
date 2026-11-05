@@ -102,6 +102,19 @@ public class SubscriptionDAO {
         }
     }
 
+    public boolean renewSubscription(int id, int extendDays) throws SQLException {
+        String sql = "UPDATE subscriptions SET "
+                + "end_date = CASE WHEN end_date >= CURDATE() THEN DATE_ADD(end_date, INTERVAL ? DAY) ELSE DATE_ADD(CURDATE(), INTERVAL ? DAY) END, "
+                + "status = 'Active' WHERE id = ?";
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, extendDays);
+            ps.setInt(2, extendDays);
+            ps.setInt(3, id);
+            return ps.executeUpdate() > 0;
+        }
+    }
+
     private Subscription mapRow(ResultSet rs) throws SQLException {
         Subscription s = new Subscription();
         s.setId(rs.getInt("id"));
