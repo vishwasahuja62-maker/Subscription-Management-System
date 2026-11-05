@@ -6,24 +6,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Login to Subscription Management System – Admin Portal">
     <title>Login – Subscription Management System</title>
-
     <link rel="stylesheet" href="css/variables.css">
     <link rel="stylesheet" href="css/style.css">
     <link rel="stylesheet" href="css/forms.css">
 </head>
 <body>
-
 <div class="login-page">
     <div class="login-card">
-
         <!-- Logo -->
         <div class="login-logo" style="background: #fff; box-shadow: none; border-radius: 50%; overflow: hidden;">
             <img src="images/logo.jpeg" alt="Logo" style="width: 100%; height: 100%; object-fit: contain; mix-blend-mode: multiply; filter: contrast(1.5) brightness(1.1);">
         </div>
-
         <h1 class="login-title">Subscription Management System</h1>
         <p class="login-subtitle">Login to continue</p>
-
         <!-- Error message from Servlet (future) -->
         <%
             String loginError = (String) request.getAttribute("loginError");

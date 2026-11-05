@@ -10,6 +10,14 @@ import java.sql.SQLException;
  */
 public final class DBConnection {
 
+    static {
+        try {
+            Class.forName("com.mysql.cj.jdbc.Driver");
+        } catch (ClassNotFoundException e) {
+            // Log or let getConnection fail if driver isn't present
+        }
+    }
+
     private static final String DEFAULT_URL =
             "jdbc:mysql://localhost:3306/subscription_management?useSSL=false&serverTimezone=UTC";
 

@@ -6,7 +6,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="Customer Management – Subscription Management System">
     <title>Customers – Subscription Management System</title>
-
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/variables.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/style.css">
     <link rel="stylesheet" href="${pageContext.request.contextPath}/css/forms.css">
@@ -270,4 +269,3 @@
 </script>
 </body>
 </html>
-

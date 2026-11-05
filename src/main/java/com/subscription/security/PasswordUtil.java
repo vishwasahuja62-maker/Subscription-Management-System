@@ -8,6 +8,9 @@ import java.security.SecureRandom;
 import java.util.Base64;
 import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
+import javax.swing.JOptionPane;
+import javax.swing.JPasswordField;
+import javax.swing.JTextArea;
 
 public final class PasswordUtil {
 
@@ -49,14 +52,32 @@ public final class PasswordUtil {
 
     public static void main(String[] args) {
         Console console = System.console();
-        if (console == null) {
-            throw new IllegalStateException(
-                    "Run this command in a terminal so the password can be entered securely.");
+        char[] password;
+        if (console != null) {
+            password = console.readPassword("New admin password: ");
+        } else {
+            JPasswordField passwordField = new JPasswordField();
+            int choice = JOptionPane.showConfirmDialog(
+                    null, passwordField, "New admin password",
+                    JOptionPane.OK_CANCEL_OPTION, JOptionPane.PLAIN_MESSAGE);
+            if (choice != JOptionPane.OK_OPTION) {
+                return;
+            }
+            password = passwordField.getPassword();
         }
 
-        char[] password = console.readPassword("New admin password: ");
-        if (password == null || password.length < 12) {
-            throw new IllegalArgumentException("Password must contain at least 12 characters.");
+        if (password == null) {
+            return;
+        }
+        if (password.length < 12) {
+            java.util.Arrays.fill(password, '\0');
+            if (console != null) {
+                throw new IllegalArgumentException("Password must contain at least 12 characters.");
+            }
+            JOptionPane.showMessageDialog(
+                    null, "Password must contain at least 12 characters.",
+                    "Invalid password", JOptionPane.ERROR_MESSAGE);
+            return;
         }
 
         String rawPassword = new String(password);
@@ -64,6 +85,17 @@ public final class PasswordUtil {
         String passwordHash = hash(rawPassword, salt);
         java.util.Arrays.fill(password, '\0');
 
-        console.printf("Password salt: %s%nPassword hash: %s%n", salt, passwordHash);
+        if (console != null) {
+            console.printf("Password salt: %s%nPassword hash: %s%n", salt, passwordHash);
+        } else {
+            JTextArea result = new JTextArea(
+                    "Password salt: " + salt + "\nPassword hash: " + passwordHash,
+                    4, 60);
+            result.setEditable(false);
+            result.setLineWrap(true);
+            result.setWrapStyleWord(true);
+            JOptionPane.showMessageDialog(
+                    null, result, "Admin password values", JOptionPane.INFORMATION_MESSAGE);
+        }
     }
 }
