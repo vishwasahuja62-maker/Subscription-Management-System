@@ -902,7 +902,8 @@ async function generateReport() {
         <table class="data-table">
             <thead><tr><th>Payment ID</th><th>Customer</th><th>Amount</th><th>Date</th><th>Status</th></tr></thead>
             <tbody>
-            ${reportPayments.map(p => `<tr>
+            ${reportPayments.length === 0 ? `<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--text-muted);">No payments recorded in this date range. Try widening the date filters.</td></tr>` : 
+            reportPayments.map(p => `<tr>
                 <td class="col-id">${escapeHtml(p.id)}</td><td>${escapeHtml(p.customerName)}</td>
                 <td>₹${p.amount.toLocaleString('en-IN')}</td><td>${escapeHtml(p.paymentDate)}</td><td>${statusBadge(escapeHtml(p.status))}</td>
             </tr>`).join('')}

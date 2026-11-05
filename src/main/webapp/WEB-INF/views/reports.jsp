@@ -63,13 +63,11 @@
                         <!-- Date Range -->
                         <div class="form-group">
                             <label class="form-label" for="rpt-from">From Date</label>
-                            <input type="date" id="rpt-from" class="form-control"
-                                   value="2025-01-01" aria-label="Report from date">
+                            <input type="date" id="rpt-from" class="form-control" aria-label="Report from date">
                         </div>
                         <div class="form-group">
                             <label class="form-label" for="rpt-to">To Date</label>
-                            <input type="date" id="rpt-to" class="form-control"
-                                   value="2025-04-30" aria-label="Report to date">
+                            <input type="date" id="rpt-to" class="form-control" aria-label="Report to date">
                         </div>
                     </div>
                     <div class="form-row form-row-2">
@@ -117,6 +115,21 @@
 </div>
 
 <script src="${pageContext.request.contextPath}/js/app.js"></script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const toInput = document.getElementById('rpt-to');
+        const fromInput = document.getElementById('rpt-from');
+        if (toInput && !toInput.value) {
+            const today = new Date().toISOString().split('T')[0];
+            toInput.value = today;
+        }
+        if (fromInput && !fromInput.value) {
+            const d = new Date();
+            d.setMonth(d.getMonth() - 6);
+            fromInput.value = d.toISOString().split('T')[0];
+        }
+    });
+</script>
 </body>
 </html>
 
