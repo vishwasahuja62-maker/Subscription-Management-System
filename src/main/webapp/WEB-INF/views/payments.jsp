@@ -210,15 +210,15 @@
 
 <!-- ── Invoice Modal ── -->
 <div class="modal-overlay" id="invoice-modal" role="dialog" aria-modal="true">
-    <div class="modal modal-md">
-        <div class="modal-header">
+    <div class="modal modal-lg" style="max-width: 680px;">
+        <div class="modal-header" style="padding: 18px 28px;">
             <h2 class="modal-title">Payment Invoice</h2>
             <button class="modal-close" onclick="closeModal('invoice-modal')" aria-label="Close modal">&times;</button>
         </div>
-        <div class="modal-body" id="invoice-content" style="padding:20px; font-family:inherit;">
+        <div class="modal-body" id="invoice-content" style="padding: 28px 32px; font-family: inherit;">
             <!-- Rendered dynamically -->
         </div>
-        <div class="modal-footer" style="justify-content:space-between;">
+        <div class="modal-footer" style="padding: 16px 32px; justify-content: space-between;">
             <button class="btn btn-secondary" onclick="closeModal('invoice-modal')">Close</button>
             <button class="btn btn-primary" onclick="printInvoice()">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">

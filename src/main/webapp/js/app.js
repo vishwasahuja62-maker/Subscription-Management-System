@@ -1203,64 +1203,73 @@ function viewInvoice(id) {
     if (!payment) return;
     const sub = DB.subscriptions.find(s => s.id === payment.subscriptionId);
     const customer = DB.customers.find(c => c.id === payment.customerId);
-    const plan = DB.plans.find(p => p.name === payment.planName);
 
     const invoiceHtml = `
-        <div style="border-bottom: 2px solid var(--border-color); padding-bottom: 12px; margin-bottom: 16px; display: flex; justify-content: space-between; align-items: center;">
+        <!-- Invoice Header -->
+        <div style="border-bottom: 2px solid var(--border-color); padding-bottom: 24px; margin-bottom: 28px; display: flex; justify-content: space-between; align-items: flex-start;">
             <div>
-                <h2 style="margin: 0; color: var(--color-primary); font-size: 1.4rem;">INVOICE</h2>
-                <div style="color: var(--text-muted); font-size: 0.85rem;">Invoice #: INV-${escapeHtml(payment.id.padStart(5, '0'))}</div>
-                <div style="color: var(--text-muted); font-size: 0.85rem;">Date: ${escapeHtml(payment.paymentDate)}</div>
+                <h1 style="margin: 0 0 6px 0; color: var(--color-primary); font-size: 1.8rem; letter-spacing: 0.5px; font-weight: 800;">INVOICE</h1>
+                <div style="color: var(--text-primary); font-weight: 600; font-size: 0.95rem;">Invoice #: INV-${escapeHtml(payment.id.padStart(5, '0'))}</div>
+                <div style="color: var(--text-muted); font-size: 0.85rem; margin-top: 2px;">Issue Date: ${escapeHtml(payment.paymentDate)}</div>
             </div>
             <div style="text-align: right;">
-                <strong style="font-size: 1.1rem;">Subscription MS</strong>
-                <div style="font-size: 0.85rem; color: var(--text-muted);">support@subscriptionms.com</div>
+                <div style="font-size: 1.25rem; font-weight: 800; color: var(--text-primary); letter-spacing: -0.2px;">Subscription MS</div>
+                <div style="font-size: 0.85rem; color: var(--text-secondary); margin-top: 4px;">Billing & Account Management</div>
+                <div style="font-size: 0.85rem; color: var(--text-muted); margin-top: 2px;">support@subscriptionms.com</div>
             </div>
         </div>
 
-        <div style="display: flex; justify-content: space-between; margin-bottom: 20px; font-size: 0.9rem;">
+        <!-- Billing & Subscription Details Grid -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 32px; margin-bottom: 32px; padding: 20px; background: rgba(0,0,0,0.02); border-radius: var(--border-radius-md); border: 1px solid var(--border-color);">
             <div>
-                <strong>Billed To:</strong>
-                <div>${escapeHtml(payment.customerName)}</div>
-                <div style="color: var(--text-secondary);">${escapeHtml(customer?.email || '')}</div>
-                <div style="color: var(--text-secondary);">${escapeHtml(customer?.phone || '')}</div>
-                <div style="color: var(--text-secondary);">${escapeHtml(customer?.address || '')}</div>
+                <div style="font-size: 0.75rem; text-transform: uppercase; font-weight: 700; color: var(--text-muted); letter-spacing: 0.5px; margin-bottom: 8px;">Billed To</div>
+                <div style="font-size: 1.05rem; font-weight: 700; color: var(--text-primary); margin-bottom: 4px;">${escapeHtml(payment.customerName)}</div>
+                <div style="color: var(--text-secondary); font-size: 0.875rem; line-height: 1.5;">${escapeHtml(customer?.email || 'N/A')}</div>
+                <div style="color: var(--text-secondary); font-size: 0.875rem; line-height: 1.5;">${escapeHtml(customer?.phone || 'N/A')}</div>
+                <div style="color: var(--text-muted); font-size: 0.85rem; margin-top: 4px;">${escapeHtml(customer?.address || '')}</div>
             </div>
             <div style="text-align: right;">
-                <strong>Payment Details:</strong>
-                <div>Status: ${statusBadge(escapeHtml(payment.status))}</div>
-                <div style="color: var(--text-secondary);">Subscription ID: #${escapeHtml(payment.subscriptionId)}</div>
-                <div style="color: var(--text-secondary);">Plan: ${escapeHtml(payment.planName)}</div>
+                <div style="font-size: 0.75rem; text-transform: uppercase; font-weight: 700; color: var(--text-muted); letter-spacing: 0.5px; margin-bottom: 8px;">Payment Details</div>
+                <div style="margin-bottom: 8px;">${statusBadge(escapeHtml(payment.status))}</div>
+                <div style="color: var(--text-secondary); font-size: 0.875rem; line-height: 1.5;">Subscription ID: <strong>#${escapeHtml(payment.subscriptionId)}</strong></div>
+                <div style="color: var(--text-secondary); font-size: 0.875rem; line-height: 1.5;">Selected Plan: <strong>${escapeHtml(payment.planName)}</strong></div>
             </div>
         </div>
 
-        <table style="width: 100%; border-collapse: collapse; margin-bottom: 20px; font-size: 0.9rem;">
+        <!-- Items Table -->
+        <table style="width: 100%; border-collapse: collapse; margin-bottom: 28px;">
             <thead>
                 <tr style="border-bottom: 2px solid var(--border-color); text-align: left;">
-                    <th style="padding: 8px 4px;">Description</th>
-                    <th style="padding: 8px 4px; text-align: right;">Amount</th>
+                    <th style="padding: 12px 8px; font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Description</th>
+                    <th style="padding: 12px 8px; text-align: right; font-size: 0.85rem; color: var(--text-muted); text-transform: uppercase; font-weight: 700;">Amount</th>
                 </tr>
             </thead>
             <tbody>
                 <tr style="border-bottom: 1px solid var(--border-color);">
-                    <td style="padding: 10px 4px;">
-                        <strong>${escapeHtml(payment.planName)} Subscription</strong>
-                        <div style="font-size: 0.8rem; color: var(--text-muted);">
-                            Duration: ${sub ? `${escapeHtml(sub.startDate)} to ${escapeHtml(sub.endDate)}` : 'Standard'}
+                    <td style="padding: 16px 8px;">
+                        <div style="font-size: 1rem; font-weight: 700; color: var(--text-primary);">${escapeHtml(payment.planName)} Plan</div>
+                        <div style="font-size: 0.825rem; color: var(--text-secondary); margin-top: 4px;">
+                            Billing Period: ${sub ? `${escapeHtml(sub.startDate)} to ${escapeHtml(sub.endDate)}` : 'Standard Cycle'}
                         </div>
                     </td>
-                    <td style="padding: 10px 4px; text-align: right; font-weight: 600;">₹${payment.amount.toLocaleString('en-IN')}</td>
+                    <td style="padding: 16px 8px; text-align: right; font-weight: 700; font-size: 1.05rem; color: var(--text-primary);">
+                        ₹${payment.amount.toLocaleString('en-IN')}
+                    </td>
                 </tr>
             </tbody>
             <tfoot>
                 <tr>
-                    <td style="padding: 12px 4px; font-weight: 700; font-size: 1rem;">Total Paid</td>
-                    <td style="padding: 12px 4px; text-align: right; font-weight: 700; font-size: 1.1rem; color: var(--color-primary);">₹${payment.amount.toLocaleString('en-IN')}</td>
+                    <td style="padding: 18px 8px 6px 8px; font-weight: 800; font-size: 1.1rem; color: var(--text-primary);">Total Paid</td>
+                    <td style="padding: 18px 8px 6px 8px; text-align: right; font-weight: 800; font-size: 1.35rem; color: var(--color-primary);">
+                        ₹${payment.amount.toLocaleString('en-IN')}
+                    </td>
                 </tr>
             </tfoot>
         </table>
-        <div style="font-size: 0.8rem; color: var(--text-muted); text-align: center; border-top: 1px dashed var(--border-color); padding-top: 12px;">
-            Thank you for your business! This is a computer-generated invoice.
+
+        <!-- Footer note -->
+        <div style="font-size: 0.825rem; color: var(--text-muted); text-align: center; border-top: 1px dashed var(--border-color); padding-top: 20px; line-height: 1.5;">
+            Thank you for choosing Subscription MS! This is an official computer-generated receipt.
         </div>
     `;
 
