@@ -86,46 +86,120 @@
                     </form>
                 </div>
             </div>
+            <!-- Security Card -->
             <div class="card" style="max-width: 800px; margin-top: 24px;">
-                <div class="card-header">
-                    <h2 class="card-title">Security & Password</h2>
+                <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <h2 class="card-title" style="margin:0;">Account Security</h2>
+                        <p class="page-subtitle" style="margin:4px 0 0 0;">Manage your password and authentication credentials</p>
+                    </div>
+                    <span class="badge badge-active" style="display:inline-flex;align-items:center;gap:6px;">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                        </svg>
+                        PBKDF2 Protected
+                    </span>
                 </div>
-                <div class="card-body">
-                    <form id="password-change-form" onsubmit="handlePasswordChange(event)">
-                        <div class="form-group">
-                            <label class="form-label" for="current-password">Current Password <span class="required">*</span></label>
-                            <input type="password" id="current-password" class="form-control" required autocomplete="current-password" />
-                            <div class="form-error" id="err-current-password"></div>
+                <div class="card-body" style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:16px;">
+                    <div>
+                        <strong>Password</strong>
+                        <div style="color:var(--text-secondary); font-size:0.875rem; margin-top:4px;">
+                            Strong salted PBKDF2 encryption is enabled. Keep your credentials safe.
                         </div>
-                        <div class="form-row form-row-2">
-                            <div class="form-group">
-                                <label class="form-label" for="new-password">New Password (Min 12 chars) <span class="required">*</span></label>
-                                <input type="password" id="new-password" class="form-control" minlength="12" required autocomplete="new-password" />
-                                <div class="form-error" id="err-new-password"></div>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label" for="confirm-password">Confirm New Password <span class="required">*</span></label>
-                                <input type="password" id="confirm-password" class="form-control" minlength="12" required autocomplete="new-password" />
-                                <div class="form-error" id="err-confirm-password"></div>
-                            </div>
-                        </div>
-                        <div class="form-group" style="margin-top: 16px;">
-                            <button class="btn btn-primary" type="submit" id="update-pass-btn">
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
-                                </svg>
-                                Update Password
-                            </button>
-                        </div>
-                    </form>
+                    </div>
+                    <button class="btn btn-secondary" onclick="openModal('password-modal')">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+                        </svg>
+                        Change Password
+                    </button>
                 </div>
             </div>
         </main>
     </div>
 </div>
 
+<!-- ── Change Password Modal ── -->
+<div class="modal-overlay" id="password-modal" role="dialog" aria-modal="true">
+    <div class="modal modal-md">
+        <div class="modal-header">
+            <h2 class="modal-title">Change Account Password</h2>
+            <button class="modal-close" onclick="closePasswordModal()" aria-label="Close modal">&times;</button>
+        </div>
+        <div class="modal-body">
+            <form id="password-change-form" onsubmit="handlePasswordChange(event)">
+                <div class="form-group">
+                    <label class="form-label" for="current-password">Current Password <span class="required">*</span></label>
+                    <div style="position:relative;">
+                        <input type="password" id="current-password" class="form-control" required autocomplete="current-password" style="padding-right:40px;" />
+                        <button type="button" onclick="togglePassVisibility('current-password', this)" style="position:absolute; right:10px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; color:var(--text-muted);" title="Toggle visibility">
+                            👁️
+                        </button>
+                    </div>
+                    <div class="form-error" id="err-current-password"></div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="new-password">New Password (Min 12 chars) <span class="required">*</span></label>
+                    <div style="position:relative;">
+                        <input type="password" id="new-password" class="form-control" minlength="12" required autocomplete="new-password" style="padding-right:40px;" />
+                        <button type="button" onclick="togglePassVisibility('new-password', this)" style="position:absolute; right:10px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; color:var(--text-muted);" title="Toggle visibility">
+                            👁️
+                        </button>
+                    </div>
+                    <div class="form-error" id="err-new-password"></div>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label" for="confirm-password">Confirm New Password <span class="required">*</span></label>
+                    <div style="position:relative;">
+                        <input type="password" id="confirm-password" class="form-control" minlength="12" required autocomplete="new-password" style="padding-right:40px;" />
+                        <button type="button" onclick="togglePassVisibility('confirm-password', this)" style="position:absolute; right:10px; top:50%; transform:translateY(-50%); background:none; border:none; cursor:pointer; color:var(--text-muted);" title="Toggle visibility">
+                            👁️
+                        </button>
+                    </div>
+                    <div class="form-error" id="err-confirm-password"></div>
+                </div>
+
+                <div class="modal-footer" style="padding:16px 0 0 0; margin-top:20px;">
+                    <button type="button" class="btn btn-secondary" onclick="closePasswordModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary" id="update-pass-btn">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
+                        </svg>
+                        Save New Password
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
 <script src="${pageContext.request.contextPath}/js/app.js"></script>
 <script>
+    function togglePassVisibility(inputId, btn) {
+        const input = document.getElementById(inputId);
+        if (!input) return;
+        if (input.type === 'password') {
+            input.type = 'text';
+            btn.textContent = '🔒';
+        } else {
+            input.type = 'password';
+            btn.textContent = '👁️';
+        }
+    }
+
+    function closePasswordModal() {
+        closeModal('password-modal');
+        const form = document.getElementById('password-change-form');
+        if (form) form.reset();
+        clearErrors('password-change-form');
+        ['current-password', 'new-password', 'confirm-password'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.type = 'password';
+        });
+    }
+
     async function handlePasswordChange(e) {
         e.preventDefault();
         const currentPassword = document.getElementById('current-password').value;
@@ -156,7 +230,7 @@
                 confirmPassword
             });
             showToast('Password updated successfully! Please remember it for next login.');
-            document.getElementById('password-change-form').reset();
+            closePasswordModal();
         } catch (error) {
             showToast(error.message, 'danger');
         } finally {
