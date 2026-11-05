@@ -36,4 +36,34 @@ public class UserDAO {
             }
         }
     }
+
+    public boolean updatePassword(int userId, String currentPassword, String newPassword) throws SQLException {
+        String query = "SELECT password_hash, password_salt FROM users WHERE id = ?";
+        try (Connection connection = DBConnection.getConnection();
+             PreparedStatement stmt = connection.prepareStatement(query)) {
+            stmt.setInt(1, userId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (!rs.next()) {
+                    return false;
+                }
+                String currentSalt = rs.getString("password_salt");
+                String currentHash = rs.getString("password_hash");
+                if (!PasswordUtil.matches(currentPassword, currentSalt, currentHash)) {
+                    return false;
+                }
+            }
+        }
+
+        String newSalt = PasswordUtil.newSalt();
+        String newHash = PasswordUtil.hash(newPassword, newSalt);
+
+        String updateSql = "UPDATE users SET password_hash = ?, password_salt = ? WHERE id = ?";
+        try (Connection connection = DBConnection.getConnection();
+             PreparedStatement updateStmt = connection.prepareStatement(updateSql)) {
+            updateStmt.setString(1, newHash);
+            updateStmt.setString(2, newSalt);
+            updateStmt.setInt(3, userId);
+            return updateStmt.executeUpdate() > 0;
+        }
+    }
 }
