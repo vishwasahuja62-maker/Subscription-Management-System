@@ -14,17 +14,20 @@ import java.util.Map;
 public class ReportDAO {
 
     public Map<String, Object> getRevenueReport(LocalDate from, LocalDate to) throws SQLException {
-        String sql = "SELECT p.plan_name, COUNT(s.id) AS sub_count, "
-                + "COALESCE(SUM(CASE WHEN pay.payment_status = 'Paid' THEN pay.amount ELSE 0 END), 0) AS revenue "
+        String sql = "SELECT p.plan_name, "
+                + "COUNT(DISTINCT s.id) AS sub_count, "
+                + "COALESCE(SUM(CASE WHEN pay.payment_status = 'Paid' THEN pay.amount ELSE 0 END), 0) AS paid_revenue, "
+                + "COALESCE(SUM(CASE WHEN pay.payment_status = 'Pending' THEN pay.amount ELSE 0 END), 0) AS pending_revenue, "
+                + "COALESCE(SUM(pay.amount), 0) AS total_amount "
                 + "FROM plans p "
                 + "LEFT JOIN subscriptions s ON p.id = s.plan_id "
-                + "LEFT JOIN payments pay ON s.id = pay.subscription_id "
-                + "AND pay.payment_date BETWEEN ? AND ? "
+                + "LEFT JOIN payments pay ON s.id = pay.subscription_id AND pay.payment_date BETWEEN ? AND ? "
                 + "GROUP BY p.id, p.plan_name "
-                + "ORDER BY revenue DESC";
+                + "ORDER BY paid_revenue DESC";
 
         List<Map<String, Object>> rows = new ArrayList<>();
-        BigDecimal totalRevenue = BigDecimal.ZERO;
+        BigDecimal totalPaid = BigDecimal.ZERO;
+        BigDecimal totalPending = BigDecimal.ZERO;
         long totalSubs = 0;
 
         try (Connection conn = DBConnection.getConnection();
@@ -36,14 +39,19 @@ public class ReportDAO {
                     Map<String, Object> row = new HashMap<>();
                     String planName = rs.getString("plan_name");
                     long subCount = rs.getLong("sub_count");
-                    BigDecimal rev = rs.getBigDecimal("revenue");
+                    BigDecimal paid = rs.getBigDecimal("paid_revenue");
+                    BigDecimal pending = rs.getBigDecimal("pending_revenue");
+                    BigDecimal total = rs.getBigDecimal("total_amount");
 
                     row.put("planName", planName);
                     row.put("subscriptions", subCount);
-                    row.put("revenue", rev);
+                    row.put("paidRevenue", paid);
+                    row.put("pendingRevenue", pending);
+                    row.put("totalAmount", total);
                     rows.add(row);
 
-                    totalRevenue = totalRevenue.add(rev != null ? rev : BigDecimal.ZERO);
+                    totalPaid = totalPaid.add(paid != null ? paid : BigDecimal.ZERO);
+                    totalPending = totalPending.add(pending != null ? pending : BigDecimal.ZERO);
                     totalSubs += subCount;
                 }
             }
@@ -52,7 +60,9 @@ public class ReportDAO {
         Map<String, Object> result = new HashMap<>();
         result.put("type", "Revenue Report");
         result.put("rows", rows);
-        result.put("totalRevenue", totalRevenue);
+        result.put("totalPaid", totalPaid);
+        result.put("totalPending", totalPending);
+        result.put("totalRevenue", totalPaid);
         result.put("totalSubscriptions", totalSubs);
         return result;
     }
@@ -177,3 +187,4 @@ public class ReportDAO {
         return result;
     }
 }
+

@@ -107,8 +107,8 @@
                 </div>
             </div>
 
-            <!-- Report Results -->
-            <div id="report-results" class="table-wrapper mt-md" style="display:none;"></div>
+            <!-- Report Results Card -->
+            <div id="report-results" class="card mt-md" style="display:none; overflow:hidden; border:1px solid var(--border-color); border-radius:var(--border-radius-lg); box-shadow:var(--shadow-sm);"></div>
 
         </main>
     </div>

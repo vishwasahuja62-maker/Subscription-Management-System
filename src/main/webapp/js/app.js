@@ -858,77 +858,138 @@ async function generateReport() {
 
     try {
         const res = await requestApi('ReportServlet', 'generate', { from, to, type });
-        let html = `<div class="report-header" style="margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border-color);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+        let html = `<div style="padding: 20px 24px 16px 24px; border-bottom: 1px solid var(--border-color); background: var(--bg-card); display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px;">
             <div>
-                <strong style="font-size:1.1rem;color:var(--text-primary);">${escapeHtml(type)}</strong>
-                <span style="color:var(--text-muted);font-size:0.9rem;margin-left:8px;">(${escapeHtml(from)} to ${escapeHtml(to)})</span>
+                <h3 style="margin: 0; font-size: 1.25rem; font-weight: 700; color: var(--text-primary); display: flex; align-items: center; gap: 10px;">
+                    ${escapeHtml(type)}
+                    <span class="badge badge-active" style="font-size: 0.75rem; text-transform: none; font-weight: 500;">Live SQL</span>
+                </h3>
+                <div style="color: var(--text-secondary); font-size: 0.875rem; margin-top: 4px;">
+                    Date Filter: <strong>${escapeHtml(from)}</strong> &rarr; <strong>${escapeHtml(to)}</strong>
+                </div>
             </div>
-            <div style="font-size:0.85rem;color:var(--color-success);font-weight:600;">
-                ● Live Database Data
+            <div style="display: flex; gap: 10px;">
+                <button class="btn btn-sm btn-outline" onclick="exportReportToCSV()">
+                    <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+                    Download CSV
+                </button>
             </div>
         </div>`;
 
         if (type === 'Revenue Report') {
             const rows = res.rows || [];
-            const totalRev = Number(res.totalRevenue || 0);
+            const totalPaid = Number(res.totalPaid || 0);
+            const totalPending = Number(res.totalPending || 0);
             const totalSubs = Number(res.totalSubscriptions || 0);
 
             html += `
-            <table class="data-table">
-                <thead><tr><th>Plan Name</th><th>Subscriptions</th><th>Revenue (₹)</th></tr></thead>
-                <tbody>
-                ${rows.length === 0 ? `<tr><td colspan="3" style="text-align:center;padding:24px;color:var(--text-muted);">No revenue records found for this period.</td></tr>` : 
-                rows.map(r => `<tr>
-                    <td><strong>${escapeHtml(r.planName)}</strong></td>
-                    <td>${Number(r.subscriptions || 0).toLocaleString('en-IN')}</td>
-                    <td>₹${Number(r.revenue || 0).toLocaleString('en-IN')}</td>
-                </tr>`).join('')}
-                </tbody>
-                <tfoot>
-                    <tr style="font-weight:700;border-top:2px solid var(--border-color);background:rgba(0,0,0,0.02);">
-                        <td>Total</td>
-                        <td>${totalSubs.toLocaleString('en-IN')}</td>
-                        <td style="color:var(--color-primary);font-size:1.05rem;">₹${totalRev.toLocaleString('en-IN')}</td>
-                    </tr>
-                </tfoot>
-            </table>`;
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; padding: 20px 24px; background: rgba(0,0,0,0.02); border-bottom: 1px solid var(--border-color);">
+                <div style="background: var(--bg-card); padding: 16px; border-radius: var(--border-radius-md); border: 1px solid var(--border-color);">
+                    <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Total Paid Revenue</div>
+                    <div style="font-size: 1.6rem; font-weight: 800; color: var(--color-success); margin-top: 4px;">₹${totalPaid.toLocaleString('en-IN')}</div>
+                </div>
+                <div style="background: var(--bg-card); padding: 16px; border-radius: var(--border-radius-md); border: 1px solid var(--border-color);">
+                    <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Pending Invoices</div>
+                    <div style="font-size: 1.6rem; font-weight: 800; color: var(--color-warning); margin-top: 4px;">₹${totalPending.toLocaleString('en-IN')}</div>
+                </div>
+                <div style="background: var(--bg-card); padding: 16px; border-radius: var(--border-radius-md); border: 1px solid var(--border-color);">
+                    <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Active Subscriptions</div>
+                    <div style="font-size: 1.6rem; font-weight: 800; color: var(--color-primary); margin-top: 4px;">${totalSubs}</div>
+                </div>
+            </div>
+            <div class="table-wrapper" style="border: none; border-radius: 0;">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th style="padding-left: 24px;">Plan Name</th>
+                            <th style="text-align: center;">Subscriptions</th>
+                            <th style="text-align: right;">Paid Revenue (₹)</th>
+                            <th style="text-align: right;">Pending (₹)</th>
+                            <th style="text-align: right; padding-right: 24px;">Total Billed (₹)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    ${rows.length === 0 ? `<tr><td colspan="5" style="text-align:center;padding:30px;color:var(--text-muted);">No revenue records found for this period.</td></tr>` : 
+                    rows.map(r => {
+                        const paid = Number(r.paidRevenue || 0);
+                        const pending = Number(r.pendingRevenue || 0);
+                        const total = Number(r.totalAmount || (paid + pending));
+                        return `<tr>
+                            <td style="padding-left: 24px;">
+                                <div style="font-weight: 700; color: var(--text-primary);">${escapeHtml(r.planName)}</div>
+                            </td>
+                            <td style="text-align: center;"><span class="badge badge-active">${Number(r.subscriptions || 0)}</span></td>
+                            <td style="text-align: right; font-weight: 600; color: var(--color-success);">₹${paid.toLocaleString('en-IN')}</td>
+                            <td style="text-align: right; font-weight: 600; color: ${pending > 0 ? 'var(--color-warning)' : 'var(--text-muted)'};">₹${pending.toLocaleString('en-IN')}</td>
+                            <td style="text-align: right; padding-right: 24px; font-weight: 700;">₹${total.toLocaleString('en-IN')}</td>
+                        </tr>`;
+                    }).join('')}
+                    </tbody>
+                    <tfoot>
+                        <tr style="font-weight: 800; background: rgba(0,0,0,0.03); border-top: 2px solid var(--border-color);">
+                            <td style="padding-left: 24px;">Total Summary</td>
+                            <td style="text-align: center;">${totalSubs}</td>
+                            <td style="text-align: right; color: var(--color-success);">₹${totalPaid.toLocaleString('en-IN')}</td>
+                            <td style="text-align: right; color: var(--color-warning);">₹${totalPending.toLocaleString('en-IN')}</td>
+                            <td style="text-align: right; padding-right: 24px; color: var(--color-primary); font-size: 1.1rem;">₹${(totalPaid + totalPending).toLocaleString('en-IN')}</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>`;
         } else if (type === 'Subscription Report') {
             const rows = res.rows || [];
             const totalCount = Number(res.totalCount || 0);
 
             html += `
-            <table class="data-table">
-                <thead><tr><th>Subscription Status</th><th>Count</th></tr></thead>
-                <tbody>
-                ${rows.length === 0 ? `<tr><td colspan="2" style="text-align:center;padding:24px;color:var(--text-muted);">No subscriptions started in this date range.</td></tr>` :
-                rows.map(r => `<tr>
-                    <td>${statusBadge(escapeHtml(r.status))}</td>
-                    <td><strong>${Number(r.count || 0).toLocaleString('en-IN')}</strong></td>
-                </tr>`).join('')}
-                </tbody>
-                <tfoot>
-                    <tr style="font-weight:700;border-top:2px solid var(--border-color);">
-                        <td>Total Subscriptions</td>
-                        <td>${totalCount.toLocaleString('en-IN')}</td>
-                    </tr>
-                </tfoot>
-            </table>`;
+            <div class="table-wrapper" style="border: none; border-radius: 0;">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th style="padding-left: 24px;">Subscription Status</th>
+                            <th style="text-align: right; padding-right: 24px;">Count</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    ${rows.length === 0 ? `<tr><td colspan="2" style="text-align:center;padding:30px;color:var(--text-muted);">No subscriptions started in this date range.</td></tr>` :
+                    rows.map(r => `<tr>
+                        <td style="padding-left: 24px;">${statusBadge(escapeHtml(r.status))}</td>
+                        <td style="text-align: right; padding-right: 24px; font-weight: 700; font-size: 1.05rem;">${Number(r.count || 0).toLocaleString('en-IN')}</td>
+                    </tr>`).join('')}
+                    </tbody>
+                    <tfoot>
+                        <tr style="font-weight: 800; background: rgba(0,0,0,0.03); border-top: 2px solid var(--border-color);">
+                            <td style="padding-left: 24px;">Total Active & Tracked Subscriptions</td>
+                            <td style="text-align: right; padding-right: 24px; color: var(--color-primary); font-size: 1.1rem;">${totalCount.toLocaleString('en-IN')}</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>`;
         } else if (type === 'Customer Report') {
             const rows = res.rows || [];
             html += `
-            <table class="data-table">
-                <thead><tr><th>Customer Name</th><th>Email</th><th>Phone</th><th>Status</th><th>New Subscriptions</th></tr></thead>
-                <tbody>
-                ${rows.length === 0 ? `<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--text-muted);">No customer records found.</td></tr>` :
-                rows.map(c => `<tr>
-                    <td><div class="cell-name">${escapeHtml(c.name)}</div></td>
-                    <td>${escapeHtml(c.email)}</td>
-                    <td>${escapeHtml(c.phone)}</td>
-                    <td>${statusBadge(escapeHtml(c.status))}</td>
-                    <td>${Number(c.subscriptions || 0)}</td>
-                </tr>`).join('')}
-                </tbody>
-            </table>`;
+            <div class="table-wrapper" style="border: none; border-radius: 0;">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th style="padding-left: 24px;">Customer Name</th>
+                            <th>Email</th>
+                            <th>Phone</th>
+                            <th style="text-align: center;">Account Status</th>
+                            <th style="text-align: right; padding-right: 24px;">Subscriptions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    ${rows.length === 0 ? `<tr><td colspan="5" style="text-align:center;padding:30px;color:var(--text-muted);">No customer records found.</td></tr>` :
+                    rows.map(c => `<tr>
+                        <td style="padding-left: 24px;"><div class="cell-name">${escapeHtml(c.name)}</div></td>
+                        <td>${escapeHtml(c.email)}</td>
+                        <td>${escapeHtml(c.phone)}</td>
+                        <td style="text-align: center;">${statusBadge(escapeHtml(c.status))}</td>
+                        <td style="text-align: right; padding-right: 24px; font-weight: 700;">${Number(c.subscriptions || 0)}</td>
+                    </tr>`).join('')}
+                    </tbody>
+                </table>
+            </div>`;
         } else {
             // Payment Report
             const rows = res.rows || [];
@@ -936,26 +997,41 @@ async function generateReport() {
             const paidAmt = Number(res.paidAmount || 0);
 
             html += `
-            <table class="data-table">
-                <thead><tr><th>Payment ID</th><th>Customer</th><th>Plan</th><th>Amount</th><th>Payment Date</th><th>Status</th></tr></thead>
-                <tbody>
-                ${rows.length === 0 ? `<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--text-muted);">No payments recorded in this date range.</td></tr>` :
-                rows.map(p => `<tr>
-                    <td class="col-id">#${escapeHtml(String(p.id))}</td>
-                    <td>${escapeHtml(p.customerName)}</td>
-                    <td>${escapeHtml(p.planName)}</td>
-                    <td style="font-weight:600;">₹${Number(p.amount || 0).toLocaleString('en-IN')}</td>
-                    <td>${escapeHtml(p.paymentDate)}</td>
-                    <td>${statusBadge(escapeHtml(p.status))}</td>
-                </tr>`).join('')}
-                </tbody>
-                <tfoot>
-                    <tr style="font-weight:700;border-top:2px solid var(--border-color);">
-                        <td colspan="3">Total Payments Recorded: ₹${totalAmt.toLocaleString('en-IN')}</td>
-                        <td colspan="3" style="text-align:right;color:var(--color-success);">Total Paid: ₹${paidAmt.toLocaleString('en-IN')}</td>
-                    </tr>
-                </tfoot>
-            </table>`;
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 16px; padding: 20px 24px; background: rgba(0,0,0,0.02); border-bottom: 1px solid var(--border-color);">
+                <div style="background: var(--bg-card); padding: 16px; border-radius: var(--border-radius-md); border: 1px solid var(--border-color);">
+                    <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Total Payments Recorded</div>
+                    <div style="font-size: 1.5rem; font-weight: 800; color: var(--text-primary); margin-top: 4px;">₹${totalAmt.toLocaleString('en-IN')}</div>
+                </div>
+                <div style="background: var(--bg-card); padding: 16px; border-radius: var(--border-radius-md); border: 1px solid var(--border-color);">
+                    <div style="font-size: 0.8rem; color: var(--text-muted); text-transform: uppercase; font-weight: 600;">Total Settled (Paid)</div>
+                    <div style="font-size: 1.5rem; font-weight: 800; color: var(--color-success); margin-top: 4px;">₹${paidAmt.toLocaleString('en-IN')}</div>
+                </div>
+            </div>
+            <div class="table-wrapper" style="border: none; border-radius: 0;">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th style="padding-left: 24px;">ID</th>
+                            <th>Customer</th>
+                            <th>Plan</th>
+                            <th style="text-align: right;">Amount (₹)</th>
+                            <th>Date</th>
+                            <th style="text-align: center; padding-right: 24px;">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    ${rows.length === 0 ? `<tr><td colspan="6" style="text-align:center;padding:30px;color:var(--text-muted);">No payments recorded in this date range.</td></tr>` :
+                    rows.map(p => `<tr>
+                        <td style="padding-left: 24px;" class="col-id">#${escapeHtml(String(p.id))}</td>
+                        <td><div style="font-weight: 600;">${escapeHtml(p.customerName)}</div></td>
+                        <td>${escapeHtml(p.planName)}</td>
+                        <td style="text-align: right; font-weight: 700;">₹${Number(p.amount || 0).toLocaleString('en-IN')}</td>
+                        <td>${escapeHtml(p.paymentDate)}</td>
+                        <td style="text-align: center; padding-right: 24px;">${statusBadge(escapeHtml(p.status))}</td>
+                    </tr>`).join('')}
+                    </tbody>
+                </table>
+            </div>`;
         }
 
         container.innerHTML = html;
