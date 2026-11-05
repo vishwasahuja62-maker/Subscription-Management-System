@@ -834,7 +834,7 @@ function deleteConfirmed() {
 window._deleteType = 'customer';
 
 /* ================================================================
-   ── REPORTS ──
+   ── REPORTS (Database-backed Analytics) ──
    ================================================================ */
 async function generateReport() {
     const from   = document.getElementById('rpt-from').value;
@@ -851,69 +851,121 @@ async function generateReport() {
     const container = document.getElementById('report-results');
     if (!container) return;
 
-    try {
-        await loadBackendData();
-    } catch (error) {
-        showToast(`Backend error: ${error.message}`, 'danger');
-        return;
-    }
-
-    const reportPayments = DB.payments.filter(p => p.paymentDate >= from && p.paymentDate <= to);
-    const reportSubscriptions = DB.subscriptions.filter(s => s.startDate >= from && s.startDate <= to);
-    let html = `<div class="report-header" style="margin-bottom:12px;padding-bottom:8px;border-bottom:1px solid var(--border-color);">
-        <strong>${escapeHtml(type)}</strong> &nbsp;|&nbsp; ${escapeHtml(from)} to ${escapeHtml(to)}
+    container.innerHTML = `<div style="text-align:center;padding:30px;color:var(--text-muted);">
+        <div style="margin-bottom:8px;">Fetching real-time analytics from database...</div>
     </div>`;
-
-    if (type === 'Revenue Report') {
-        const total = reportPayments.filter(p => p.status === 'Paid').reduce((sum, p) => sum + p.amount, 0);
-        html += `
-        <table class="data-table">
-            <thead><tr><th>Plan</th><th>Subscriptions</th><th>Revenue (₹)</th></tr></thead>
-            <tbody>
-            ${DB.plans.map(p => {
-                const subs = DB.subscriptions.filter(s => s.planId === p.id);
-                const rev  = reportPayments.filter(pay => subs.some(s => s.id === pay.subscriptionId) && pay.status === 'Paid').reduce((sum, pay) => sum + pay.amount, 0);
-                return `<tr><td>${escapeHtml(p.name)}</td><td>${subs.length}</td><td>₹${rev.toLocaleString('en-IN')}</td></tr>`;
-            }).join('')}
-            </tbody>
-            <tfoot><tr style="font-weight:700;border-top:2px solid var(--border-color)"><td colspan="2">Total</td><td>₹${total.toLocaleString('en-IN')}</td></tr></tfoot>
-        </table>`;
-    } else if (type === 'Subscription Report') {
-        html += `
-        <table class="data-table">
-            <thead><tr><th>Status</th><th>Count</th></tr></thead>
-            <tbody>
-            ${['Active','Expiring','Inactive'].map(st => `<tr><td>${statusBadge(st)}</td><td>${reportSubscriptions.filter(s=>s.status===st).length}</td></tr>`).join('')}
-            </tbody>
-        </table>`;
-    } else if (type === 'Customer Report') {
-        html += `
-        <table class="data-table">
-            <thead><tr><th>Customer</th><th>Email</th><th>Status</th><th>Subscriptions</th></tr></thead>
-            <tbody>
-            ${DB.customers.map(c => `<tr>
-                <td>${escapeHtml(c.name)}</td><td>${escapeHtml(c.email)}</td><td>${statusBadge(escapeHtml(c.status))}</td>
-                <td>${DB.subscriptions.filter(s=>s.customerId===c.id).length}</td>
-            </tr>`).join('')}
-            </tbody>
-        </table>`;
-    } else {
-        html += `
-        <table class="data-table">
-            <thead><tr><th>Payment ID</th><th>Customer</th><th>Amount</th><th>Date</th><th>Status</th></tr></thead>
-            <tbody>
-            ${reportPayments.length === 0 ? `<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--text-muted);">No payments recorded in this date range. Try widening the date filters.</td></tr>` : 
-            reportPayments.map(p => `<tr>
-                <td class="col-id">${escapeHtml(p.id)}</td><td>${escapeHtml(p.customerName)}</td>
-                <td>₹${p.amount.toLocaleString('en-IN')}</td><td>${escapeHtml(p.paymentDate)}</td><td>${statusBadge(escapeHtml(p.status))}</td>
-            </tr>`).join('')}
-            </tbody>
-        </table>`;
-    }
-
-    container.innerHTML = html;
     container.style.display = 'block';
-    showToast('Report generated successfully!');
+
+    try {
+        const res = await requestApi('ReportServlet', 'generate', { from, to, type });
+        let html = `<div class="report-header" style="margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid var(--border-color);display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;">
+            <div>
+                <strong style="font-size:1.1rem;color:var(--text-primary);">${escapeHtml(type)}</strong>
+                <span style="color:var(--text-muted);font-size:0.9rem;margin-left:8px;">(${escapeHtml(from)} to ${escapeHtml(to)})</span>
+            </div>
+            <div style="font-size:0.85rem;color:var(--color-success);font-weight:600;">
+                ● Live Database Data
+            </div>
+        </div>`;
+
+        if (type === 'Revenue Report') {
+            const rows = res.rows || [];
+            const totalRev = Number(res.totalRevenue || 0);
+            const totalSubs = Number(res.totalSubscriptions || 0);
+
+            html += `
+            <table class="data-table">
+                <thead><tr><th>Plan Name</th><th>Subscriptions</th><th>Revenue (₹)</th></tr></thead>
+                <tbody>
+                ${rows.length === 0 ? `<tr><td colspan="3" style="text-align:center;padding:24px;color:var(--text-muted);">No revenue records found for this period.</td></tr>` : 
+                rows.map(r => `<tr>
+                    <td><strong>${escapeHtml(r.planName)}</strong></td>
+                    <td>${Number(r.subscriptions || 0).toLocaleString('en-IN')}</td>
+                    <td>₹${Number(r.revenue || 0).toLocaleString('en-IN')}</td>
+                </tr>`).join('')}
+                </tbody>
+                <tfoot>
+                    <tr style="font-weight:700;border-top:2px solid var(--border-color);background:rgba(0,0,0,0.02);">
+                        <td>Total</td>
+                        <td>${totalSubs.toLocaleString('en-IN')}</td>
+                        <td style="color:var(--color-primary);font-size:1.05rem;">₹${totalRev.toLocaleString('en-IN')}</td>
+                    </tr>
+                </tfoot>
+            </table>`;
+        } else if (type === 'Subscription Report') {
+            const rows = res.rows || [];
+            const totalCount = Number(res.totalCount || 0);
+
+            html += `
+            <table class="data-table">
+                <thead><tr><th>Subscription Status</th><th>Count</th></tr></thead>
+                <tbody>
+                ${rows.length === 0 ? `<tr><td colspan="2" style="text-align:center;padding:24px;color:var(--text-muted);">No subscriptions started in this date range.</td></tr>` :
+                rows.map(r => `<tr>
+                    <td>${statusBadge(escapeHtml(r.status))}</td>
+                    <td><strong>${Number(r.count || 0).toLocaleString('en-IN')}</strong></td>
+                </tr>`).join('')}
+                </tbody>
+                <tfoot>
+                    <tr style="font-weight:700;border-top:2px solid var(--border-color);">
+                        <td>Total Subscriptions</td>
+                        <td>${totalCount.toLocaleString('en-IN')}</td>
+                    </tr>
+                </tfoot>
+            </table>`;
+        } else if (type === 'Customer Report') {
+            const rows = res.rows || [];
+            html += `
+            <table class="data-table">
+                <thead><tr><th>Customer Name</th><th>Email</th><th>Phone</th><th>Status</th><th>New Subscriptions</th></tr></thead>
+                <tbody>
+                ${rows.length === 0 ? `<tr><td colspan="5" style="text-align:center;padding:24px;color:var(--text-muted);">No customer records found.</td></tr>` :
+                rows.map(c => `<tr>
+                    <td><div class="cell-name">${escapeHtml(c.name)}</div></td>
+                    <td>${escapeHtml(c.email)}</td>
+                    <td>${escapeHtml(c.phone)}</td>
+                    <td>${statusBadge(escapeHtml(c.status))}</td>
+                    <td>${Number(c.subscriptions || 0)}</td>
+                </tr>`).join('')}
+                </tbody>
+            </table>`;
+        } else {
+            // Payment Report
+            const rows = res.rows || [];
+            const totalAmt = Number(res.totalAmount || 0);
+            const paidAmt = Number(res.paidAmount || 0);
+
+            html += `
+            <table class="data-table">
+                <thead><tr><th>Payment ID</th><th>Customer</th><th>Plan</th><th>Amount</th><th>Payment Date</th><th>Status</th></tr></thead>
+                <tbody>
+                ${rows.length === 0 ? `<tr><td colspan="6" style="text-align:center;padding:24px;color:var(--text-muted);">No payments recorded in this date range.</td></tr>` :
+                rows.map(p => `<tr>
+                    <td class="col-id">#${escapeHtml(String(p.id))}</td>
+                    <td>${escapeHtml(p.customerName)}</td>
+                    <td>${escapeHtml(p.planName)}</td>
+                    <td style="font-weight:600;">₹${Number(p.amount || 0).toLocaleString('en-IN')}</td>
+                    <td>${escapeHtml(p.paymentDate)}</td>
+                    <td>${statusBadge(escapeHtml(p.status))}</td>
+                </tr>`).join('')}
+                </tbody>
+                <tfoot>
+                    <tr style="font-weight:700;border-top:2px solid var(--border-color);">
+                        <td colspan="3">Total Payments Recorded: ₹${totalAmt.toLocaleString('en-IN')}</td>
+                        <td colspan="3" style="text-align:right;color:var(--color-success);">Total Paid: ₹${paidAmt.toLocaleString('en-IN')}</td>
+                    </tr>
+                </tfoot>
+            </table>`;
+        }
+
+        container.innerHTML = html;
+        showToast('Report generated directly from database!');
+    } catch (error) {
+        container.innerHTML = `<div style="text-align:center;padding:24px;color:var(--color-danger);">
+            <strong>Failed to generate report:</strong> ${escapeHtml(error.message)}
+        </div>`;
+        showToast(error.message, 'danger');
+    }
 }
 
 function viewInvoice(id) {
