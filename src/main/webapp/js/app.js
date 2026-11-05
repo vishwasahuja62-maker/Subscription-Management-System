@@ -315,6 +315,94 @@ function sendRenewalReminder(subId) {
 function setInner(id, val) { const el = document.getElementById(id); if (el) el.textContent = val; }
 
 /* ================================================================
+   ── NOTIFICATION BELL DROPDOWN ──
+   ================================================================ */
+function toggleNotifDropdown(e) {
+    if (e) e.stopPropagation();
+    const dropdown = document.getElementById('notif-dropdown');
+    if (!dropdown) return;
+    const isShowing = dropdown.classList.contains('show');
+    if (isShowing) {
+        dropdown.classList.remove('show');
+    } else {
+        renderNotificationDropdown();
+        dropdown.classList.add('show');
+    }
+}
+
+function renderNotificationDropdown() {
+    const list = document.getElementById('notif-dropdown-list');
+    const badge = document.getElementById('global-notif-badge');
+    const countBadge = document.getElementById('notif-count-badge');
+    if (!list) return;
+
+    const now = new Date();
+    const expiring = DB.subscriptions.map(s => {
+        const endDate = new Date(s.endDate + 'T00:00:00');
+        const diffDays = Math.ceil((endDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+        return { ...s, diffDays };
+    }).filter(s => s.status !== 'Inactive' && s.diffDays <= 7);
+
+    const pendingPayments = DB.payments.filter(p => p.status === 'Pending');
+
+    const totalAlerts = expiring.length + pendingPayments.length;
+
+    if (badge) {
+        badge.style.display = totalAlerts > 0 ? 'block' : 'none';
+    }
+    if (countBadge) {
+        countBadge.textContent = `${totalAlerts} Alert${totalAlerts === 1 ? '' : 's'}`;
+    }
+
+    if (totalAlerts === 0) {
+        list.innerHTML = `<div style="text-align:center;padding:24px;color:var(--text-muted);font-size:0.85rem;">
+            🎉 All clear! No pending payments or expiring subscriptions.
+        </div>`;
+        return;
+    }
+
+    let itemsHtml = '';
+
+    expiring.forEach(s => {
+        const timeLabel = s.diffDays <= 0 ? 'Expired' : (s.diffDays === 0 ? 'Expires today' : `Expires in ${s.diffDays} day(s)`);
+        itemsHtml += `
+        <a class="notif-item" href="SubscriptionServlet">
+            <div class="notif-item-icon warning">⚠️</div>
+            <div style="flex:1;">
+                <div class="notif-item-title">${escapeHtml(s.customerName)} (${escapeHtml(s.planName)})</div>
+                <div class="notif-item-desc">${timeLabel} on ${escapeHtml(s.endDate)}</div>
+            </div>
+        </a>`;
+    });
+
+    pendingPayments.forEach(p => {
+        itemsHtml += `
+        <a class="notif-item" href="PaymentServlet">
+            <div class="notif-item-icon danger">₹</div>
+            <div style="flex:1;">
+                <div class="notif-item-title">Pending Payment: ₹${Number(p.amount).toLocaleString('en-IN')}</div>
+                <div class="notif-item-desc">${escapeHtml(p.customerName)} • Due since ${escapeHtml(p.paymentDate)}</div>
+            </div>
+        </a>`;
+    });
+
+    list.innerHTML = itemsHtml;
+}
+
+// Global click listener to close notification dropdown when clicking outside
+document.addEventListener('click', () => {
+    const dropdown = document.getElementById('notif-dropdown');
+    if (dropdown) dropdown.classList.remove('show');
+});
+
+// Update badge count whenever data loads
+const originalLoadBackendData = loadBackendData;
+loadBackendData = async function() {
+    await originalLoadBackendData();
+    renderNotificationDropdown();
+};
+
+/* ================================================================
    ── CUSTOMERS ──
    ================================================================ */
 let editingCustomerId = null;
