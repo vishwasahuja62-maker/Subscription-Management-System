@@ -329,14 +329,14 @@ input, select, textarea { font-family: inherit; }
 /* Notification Dropdown Panel */
 .notif-dropdown {
     position: absolute;
-    top: calc(100% + 8px);
-    right: 0;
-    width: 320px;
-    background: var(--bg-card);
-    border: 1px solid var(--border-color);
-    border-radius: var(--border-radius-md);
-    box-shadow: var(--shadow-lg);
-    z-index: 1000;
+    top: calc(100% + 12px);
+    right: -10px;
+    width: 340px;
+    background: #ffffff !important;
+    border: 1px solid #cbd5e1;
+    border-radius: 12px;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.25), 0 8px 10px -6px rgba(0, 0, 0, 0.2);
+    z-index: 9999;
     display: none;
     flex-direction: column;
     overflow: hidden;
@@ -351,11 +351,12 @@ input, select, textarea { font-family: inherit; }
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background: var(--bg-card);
+    background: inherit;
 }
 .notif-dropdown-header h4 {
     margin: 0;
     font-size: 0.95rem;
+    font-weight: 700;
     color: var(--text-primary);
 }
 .notif-dropdown-list {
@@ -374,9 +375,10 @@ input, select, textarea { font-family: inherit; }
     transition: background 0.15s;
     text-decoration: none;
     color: inherit;
+    background: inherit;
 }
 .notif-item:hover {
-    background: var(--bg-app);
+    background: rgba(0, 0, 0, 0.04);
 }
 .notif-item-icon {
     width: 32px;
@@ -405,7 +407,7 @@ input, select, textarea { font-family: inherit; }
 }
 .notif-dropdown-footer {
     padding: 10px 16px;
-    background: var(--bg-app);
+    background: rgba(0, 0, 0, 0.02);
     text-align: center;
     border-top: 1px solid var(--border-color);
 }
@@ -415,9 +417,19 @@ input, select, textarea { font-family: inherit; }
     text-decoration: none;
     font-weight: 600;
 }
-@keyframes slideInDown {
-    from { opacity: 0; transform: translateY(-8px); }
-    to { opacity: 1; transform: translateY(0); }
+
+/* Dark mode for notification dropdown */
+body.dark-mode .notif-dropdown {
+    background: #1e293b !important;
+    border-color: #334155;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px -6px rgba(0, 0, 0, 0.4);
+}
+body.dark-mode .notif-item:hover {
+    background: #334155 !important;
+}
+body.dark-mode .notif-dropdown-footer {
+    background: #0f172a !important;
+    border-top-color: #334155;
 }
 
 /* ================================================================
