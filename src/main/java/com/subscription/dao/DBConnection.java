@@ -28,10 +28,10 @@ public final class DBConnection {
         String password = System.getenv("SMS_DB_PASSWORD");
 
         if (username == null || username.trim().isEmpty()) {
-            throw new SQLException("SMS_DB_USERNAME is not configured.");
+            username = "root";
         }
         if (password == null) {
-            throw new SQLException("SMS_DB_PASSWORD is not configured.");
+            password = "Vishwas@2006";
         }
 
         String url = System.getenv("SMS_DB_URL");
