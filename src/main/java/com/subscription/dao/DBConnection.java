@@ -52,7 +52,7 @@ public final class DBConnection {
     }
 
     private static final String DEFAULT_URL =
-            "jdbc:mysql://localhost:3306/subscription_management?useSSL=false&serverTimezone=UTC";
+            "jdbc:mysql://localhost:3306/subscription_management?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC";
 
     private DBConnection() {}
 
