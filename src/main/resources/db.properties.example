@@ -1,0 +1,5 @@
+# Copy this to db.properties and set your local credentials
+db.url=jdbc:mysql://localhost:3306/subscription_management?useSSL=false&serverTimezone=UTC
+db.username=your_mysql_username
+db.password=your_mysql_password
+

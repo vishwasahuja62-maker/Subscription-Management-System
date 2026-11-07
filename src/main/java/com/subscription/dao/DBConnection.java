@@ -1,20 +1,32 @@
 package com.subscription.dao;
 
+import java.io.InputStream;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.Properties;
 
 /**
- * Opens MySQL connections using environment variables so credentials are not
- * stored in source control.
+ * Opens MySQL connections. Checks:
+ * 1. Environment variables (SMS_DB_USERNAME, SMS_DB_PASSWORD, SMS_DB_URL)
+ * 2. Local uncommitted db.properties file on the classpath
+ * Prevents plain-text passwords from ever being checked into source control.
  */
 public final class DBConnection {
+
+    private static final Properties FILE_PROPS = new Properties();
 
     static {
         try {
             Class.forName("com.mysql.cj.jdbc.Driver");
         } catch (ClassNotFoundException e) {
             // Log or let getConnection fail if driver isn't present
+        }
+        try (InputStream in = DBConnection.class.getClassLoader().getResourceAsStream("db.properties")) {
+            if (in != null) {
+                FILE_PROPS.load(in);
+            }
+        } catch (Exception ignored) {
         }
     }
 
@@ -24,20 +36,29 @@ public final class DBConnection {
     private DBConnection() {}
 
     public static Connection getConnection() throws SQLException {
+        // Priority 1: Environment Variables
         String username = System.getenv("SMS_DB_USERNAME");
         String password = System.getenv("SMS_DB_PASSWORD");
+        String url = System.getenv("SMS_DB_URL");
 
+        // Priority 2: Local ignored db.properties file
         if (username == null || username.trim().isEmpty()) {
-            username = "root";
+            username = FILE_PROPS.getProperty("db.username");
         }
         if (password == null) {
-            password = "Vishwas@2006";
+            password = FILE_PROPS.getProperty("db.password");
+        }
+        if (url == null || url.trim().isEmpty()) {
+            url = FILE_PROPS.getProperty("db.url", DEFAULT_URL);
         }
 
-        String url = System.getenv("SMS_DB_URL");
-        if (url == null || url.trim().isEmpty()) {
-            url = DEFAULT_URL;
+        if (username == null || username.trim().isEmpty()) {
+            throw new SQLException("Database username is not configured. Set SMS_DB_USERNAME or provide db.properties.");
         }
+        if (password == null) {
+            throw new SQLException("Database password is not configured. Set SMS_DB_PASSWORD or provide db.properties.");
+        }
+
         return DriverManager.getConnection(url, username, password);
     }
 }
