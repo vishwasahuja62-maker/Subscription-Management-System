@@ -66,10 +66,11 @@ public class LoginServlet extends HttpServlet {
             session.setAttribute("loggedUser", user);
             session.setMaxInactiveInterval(30 * 60);
             res.sendRedirect(req.getContextPath() + "/LoginServlet?action=dashboard");
-        } catch (SQLException e) {
+        } catch (Exception e) {
             log("Unable to authenticate user.", e);
+            e.printStackTrace();
             res.setStatus(HttpServletResponse.SC_SERVICE_UNAVAILABLE);
-            req.setAttribute("loginError", "Login service is temporarily unavailable.");
+            req.setAttribute("loginError", "Database error: " + e.getMessage());
             req.getRequestDispatcher("/login.jsp").forward(req, res);
         }
     }

@@ -22,11 +22,32 @@ public final class DBConnection {
         } catch (ClassNotFoundException e) {
             // Log or let getConnection fail if driver isn't present
         }
+        loadProperties();
+    }
+
+    private static void loadProperties() {
+        // Try classpath first
         try (InputStream in = DBConnection.class.getClassLoader().getResourceAsStream("db.properties")) {
             if (in != null) {
                 FILE_PROPS.load(in);
+                return;
             }
-        } catch (Exception ignored) {
+        } catch (Exception ignored) {}
+
+        // Try direct file paths on workspace if classpath fails in SmartTomcat
+        String[] candidatePaths = {
+            "db.properties",
+            "src/main/resources/db.properties",
+            "WEB-INF/classes/db.properties"
+        };
+        for (String path : candidatePaths) {
+            java.io.File file = new java.io.File(path);
+            if (file.exists() && file.isFile()) {
+                try (java.io.FileInputStream fis = new java.io.FileInputStream(file)) {
+                    FILE_PROPS.load(fis);
+                    return;
+                } catch (Exception ignored) {}
+            }
         }
     }
 
