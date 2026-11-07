@@ -269,12 +269,12 @@ function renderDashboard() {
                     <td><div style="font-weight:600;">${escapeHtml(s.planName)}</div></td>
                     <td>${escapeHtml(s.endDate)}</td>
                     <td><span class="badge ${badgeClass}">${dayText}</span></td>
-                    <td style="text-align:right;">
+                    <td style="text-align:right; display:flex; justify-content:flex-end; gap:6px;">
                         <button class="btn btn-sm btn-primary" onclick="quickRenewSubscription('${s.id}')" title="Renew for 30 days">
-                            ⚡ Renew Now
+                            ⚡ Renew
                         </button>
-                        <button class="btn btn-sm btn-outline" onclick="sendRenewalReminder('${s.id}')" title="Send Reminder Notification">
-                            ✉️ Remind
+                        <button class="btn btn-sm" style="background:#25D366; color:#fff; border-color:#25D366; display:inline-flex; align-items:center; gap:4px; padding:4px 8px; font-size:0.75rem;" onclick="sendRenewalWhatsApp('${s.id}')" title="Send WhatsApp Expiry Reminder">
+                            💬 WhatsApp
                         </button>
                     </td>
                 </tr>`;
@@ -311,9 +311,88 @@ async function quickRenewSubscription(subId) {
 }
 
 function sendRenewalReminder(subId) {
+    sendRenewalWhatsApp(subId);
+}
+
+/* ================================================================
+   ── WHATSAPP DISPATCHER ENGINE ──
+   ================================================================ */
+function formatWhatsAppPhone(phone) {
+    if (!phone) return '';
+    let cleaned = String(phone).replace(/\D/g, '');
+    if (cleaned.length === 10) cleaned = '91' + cleaned; // default to India country code if 10 digits
+    return cleaned;
+}
+
+function openWhatsAppUrl(phone, text) {
+    const formattedPhone = formatWhatsAppPhone(phone);
+    if (!formattedPhone) {
+        showToast('Valid phone number not found for customer.', 'warning');
+        return;
+    }
+    const url = `https://wa.me/${formattedPhone}?text=${encodeURIComponent(text)}`;
+    window.open(url, '_blank');
+}
+
+function sendRenewalWhatsApp(subId) {
     const sub = DB.subscriptions.find(s => s.id === subId);
     if (!sub) return;
-    showToast(`Reminder email queued for ${sub.customerName} regarding ${sub.planName}!`, 'info');
+    const customer = DB.customers.find(c => c.id === sub.customerId);
+    const phone = customer?.phone || '';
+
+    const message = 
+`🔔 *Subscription Expiry Reminder*
+Dear *${sub.customerName}*,
+
+Your subscription for *${sub.planName}* is expiring on *${sub.endDate}*.
+To avoid any service interruption, please renew your plan.
+
+👉 Subscription ID: #${sub.id}
+👉 Status: ${sub.status}
+
+Need help renewing? Reply to this message.
+Thank you,
+*Subscription Management System*`;
+
+    openWhatsAppUrl(phone, message);
+}
+
+let currentInvoicePaymentId = null;
+
+function sendInvoiceWhatsApp() {
+    if (!currentInvoicePaymentId) return;
+    const payment = DB.payments.find(p => p.id === currentInvoicePaymentId);
+    if (!payment) return;
+    const customer = DB.customers.find(c => c.id === payment.customerId);
+    const phone = customer?.phone || '';
+
+    const message =
+`🧾 *Official Payment Receipt*
+Dear *${payment.customerName}*,
+
+Thank you for your payment! Here are your invoice details:
+
+• *Invoice Number:* INV-${payment.id.padStart(5, '0')}
+• *Plan:* ${payment.planName}
+• *Amount Paid:* ₹${Number(payment.amount).toLocaleString('en-IN')}
+• *Payment Date:* ${payment.paymentDate}
+• *Status:* ✅ ${payment.status}
+
+For any queries regarding this invoice, please reach out to our support team.
+*Subscription Management System*`;
+
+    openWhatsAppUrl(phone, message);
+}
+
+let activeCustomerProfileId = null;
+
+function chatCustomerWhatsApp() {
+    if (!activeCustomerProfileId) return;
+    const customer = DB.customers.find(c => c.id === activeCustomerProfileId);
+    if (!customer) return;
+
+    const message = `Hello *${customer.name}*, greeting from Subscription Management System! How can we assist you today?`;
+    openWhatsAppUrl(customer.phone, message);
 }
 
 function setInner(id, val) { const el = document.getElementById(id); if (el) el.textContent = val; }
@@ -506,6 +585,7 @@ function renderCustomerTable(data) {
 }
 
 function openCustomerProfile(id) {
+    activeCustomerProfileId = id;
     const customer = DB.customers.find(c => c.id === id);
     if (!customer) return;
 
@@ -1334,6 +1414,7 @@ async function generateReport() {
 }
 
 function viewInvoice(id) {
+    currentInvoicePaymentId = id;
     const payment = DB.payments.find(p => p.id === id);
     if (!payment) return;
     const sub = DB.subscriptions.find(s => s.id === payment.subscriptionId);

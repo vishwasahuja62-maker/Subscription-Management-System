@@ -339,8 +339,14 @@
                 </table>
             </div>
         </div>
-        <div class="modal-footer" style="padding: 16px 28px;">
+        <div class="modal-footer" style="padding: 16px 28px; justify-content: space-between;">
             <button class="btn btn-secondary" onclick="closeModal('customer-profile-modal')">Close</button>
+            <button class="btn btn-success" id="btn-cprofile-whatsapp" style="background:#25D366; color:#fff; border-color:#25D366; display:inline-flex; align-items:center; gap:8px;" onclick="chatCustomerWhatsApp()" title="Open WhatsApp Chat">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.711 2.598 2.669-.699c.969.584 1.771.895 2.791.896h.001c3.181 0 5.767-2.586 5.768-5.766 0-3.18-2.587-5.766-5.769-5.766zm3.374 8.167c-.145.407-.743.771-1.037.818-.28.045-.632.067-2.036-.514-1.666-.69-2.738-2.385-2.82-2.496-.083-.11-.676-.901-.676-1.718 0-.817.426-1.218.577-1.385.152-.166.331-.208.441-.208.111 0 .221.002.318.006.103.004.241-.039.378.29.145.347.498 1.218.541 1.307.044.09.073.194.013.313-.059.119-.089.193-.177.296-.088.104-.185.231-.264.311-.089.09-.182.188-.078.367.103.178.46 1.758 1.986 2.438.196.088.35.14.47.178.197.063.376.054.517.033.158-.024.485-.198.554-.39zM12 2C6.477 2 2 6.477 2 12c0 1.891.524 3.662 1.436 5.176L2 22l4.981-1.393C8.423 21.492 10.155 22 12 22c5.523 0 10-4.477 10-10S17.523 2 12 2z"/>
+                </svg>
+                Message on WhatsApp
+            </button>
         </div>
     </div>
 </div>
