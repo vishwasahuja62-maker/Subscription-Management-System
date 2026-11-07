@@ -79,6 +79,10 @@ async function loadBackendData() {
         planName: p.subscription.plan.planName, amount: p.amount,
         paymentDate: p.paymentDate, status: p.paymentStatus
     }));
+
+    if (typeof renderNotificationDropdown === 'function') {
+        renderNotificationDropdown();
+    }
 }
 
 async function initializeBackendPage(render) {
@@ -395,12 +399,59 @@ document.addEventListener('click', () => {
     if (dropdown) dropdown.classList.remove('show');
 });
 
-// Update badge count whenever data loads
-const originalLoadBackendData = loadBackendData;
-loadBackendData = async function() {
-    await originalLoadBackendData();
-    renderNotificationDropdown();
+/* ================================================================
+   ── PAGINATION ENGINE ──
+   ================================================================ */
+const paginationState = {
+    customers:     { page: 1, pageSize: 5 },
+    subscriptions: { page: 1, pageSize: 5 },
+    payments:      { page: 1, pageSize: 5 }
 };
+
+function paginate(data, type) {
+    const state = paginationState[type];
+    const totalRecords = data.length;
+    const totalPages = Math.max(1, Math.ceil(totalRecords / state.pageSize));
+    if (state.page > totalPages) state.page = totalPages;
+    if (state.page < 1) state.page = 1;
+
+    const start = (state.page - 1) * state.pageSize;
+    const paginatedData = data.slice(start, start + state.pageSize);
+
+    renderPaginationControls(type, totalRecords, totalPages);
+    return { paginatedData, start, totalRecords };
+}
+
+function renderPaginationControls(type, totalRecords, totalPages) {
+    const controls = document.getElementById(`${type === 'subscriptions' ? 'sub' : (type === 'customers' ? 'customer' : 'payment')}-pagination`);
+    if (!controls) return;
+    const state = paginationState[type];
+
+    if (totalRecords <= state.pageSize) {
+        controls.innerHTML = '';
+        return;
+    }
+
+    let html = `
+        <button class="page-btn" onclick="changePage('${type}', ${state.page - 1})" ${state.page <= 1 ? 'disabled' : ''} title="Previous Page">&laquo;</button>
+    `;
+
+    for (let i = 1; i <= totalPages; i++) {
+        html += `<button class="page-btn ${i === state.page ? 'active' : ''}" onclick="changePage('${type}', ${i})">${i}</button>`;
+    }
+
+    html += `
+        <button class="page-btn" onclick="changePage('${type}', ${state.page + 1})" ${state.page >= totalPages ? 'disabled' : ''} title="Next Page">&raquo;</button>
+    `;
+    controls.innerHTML = html;
+}
+
+function changePage(type, newPage) {
+    paginationState[type].page = newPage;
+    if (type === 'customers') searchCustomers();
+    else if (type === 'subscriptions') filterSubs();
+    else if (type === 'payments') searchPayments();
+}
 
 /* ================================================================
    ── CUSTOMERS ──
@@ -423,9 +474,12 @@ function renderCustomerTable(data) {
         tbody.innerHTML = `<tr><td colspan="6"><div class="empty-state">
             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M17 20h5v-1a3 3 0 00-5.356-1.857M17 20H7m10 0v-1c0-.656-.126-1.284-.356-1.857M7 20H2v-1a3 3 0 015.356-1.857M7 20v-1c0-.656.126-1.284.356-1.857m0 0a5.002 5.002 0 019.288 0"/></svg>
             <h3>No customers found</h3><p>Add your first customer to get started.</p></div></td></tr>`;
+        const pg = document.getElementById('customer-pagination'); if (pg) pg.innerHTML = '';
+        const countEl = document.getElementById('customer-count'); if (countEl) countEl.textContent = 'Showing 0 record(s)';
         return;
     }
-    tbody.innerHTML = data.map(c => `
+    const { paginatedData, start, totalRecords } = paginate(data, 'customers');
+    tbody.innerHTML = paginatedData.map(c => `
         <tr>
             <td class="col-id">${escapeHtml(c.id)}</td>
             <td><div class="cell-name">${escapeHtml(c.name)}</div><div class="cell-sub">${escapeHtml(c.email)}</div></td>
@@ -433,6 +487,10 @@ function renderCustomerTable(data) {
             <td>${escapeHtml(c.phone)}</td>
             <td>${statusBadge(escapeHtml(c.status))}</td>
             <td><div class="actions-cell">
+                <button class="btn btn-sm btn-outline" onclick="openCustomerProfile('${c.id}')" title="View Profile">
+                    <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+                    View
+                </button>
                 <button class="btn btn-sm btn-outline" onclick="openEditCustomer('${c.id}')">
                     <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
                     Edit
@@ -444,7 +502,70 @@ function renderCustomerTable(data) {
             </div></td>
         </tr>`).join('');
     const countEl = document.getElementById('customer-count');
-    if (countEl) countEl.textContent = `Showing ${data.length} record(s)`;
+    if (countEl) countEl.textContent = `Showing ${start + 1}–${Math.min(start + paginatedData.length, totalRecords)} of ${totalRecords} record(s)`;
+}
+
+function openCustomerProfile(id) {
+    const customer = DB.customers.find(c => c.id === id);
+    if (!customer) return;
+
+    // Header
+    const avatarEl = document.getElementById('cprofile-avatar');
+    if (avatarEl) avatarEl.textContent = customer.name.charAt(0).toUpperCase();
+    const nameEl = document.getElementById('cprofile-name');
+    if (nameEl) nameEl.textContent = customer.name;
+    const subtitleEl = document.getElementById('cprofile-subtitle');
+    if (subtitleEl) subtitleEl.textContent = `Customer ID: #${customer.id}`;
+    const emailEl = document.getElementById('cprofile-email');
+    if (emailEl) emailEl.textContent = customer.email;
+    const phoneEl = document.getElementById('cprofile-phone');
+    if (phoneEl) phoneEl.textContent = customer.phone;
+    const dobEl = document.getElementById('cprofile-dob');
+    if (dobEl) dobEl.textContent = customer.dob || 'N/A';
+    const addrEl = document.getElementById('cprofile-address');
+    if (addrEl) addrEl.textContent = customer.address || 'N/A';
+    const badgeEl = document.getElementById('cprofile-status-badge');
+    if (badgeEl) badgeEl.innerHTML = statusBadge(escapeHtml(customer.status));
+
+    // Subscriptions
+    const customerSubs = DB.subscriptions.filter(s => s.customerId === id);
+    const activeSubs = customerSubs.filter(s => s.status === 'Active').length;
+    const activePlansEl = document.getElementById('cprofile-active-plans');
+    if (activePlansEl) activePlansEl.textContent = activeSubs;
+
+    const subTbody = document.getElementById('cprofile-subs-tbody');
+    if (subTbody) {
+        subTbody.innerHTML = customerSubs.length === 0
+            ? `<tr><td colspan="4" style="text-align:center;padding:16px;color:var(--text-muted);">No subscriptions yet.</td></tr>`
+            : customerSubs.map(s => `<tr>
+                <td class="col-id">#${escapeHtml(s.id)}</td>
+                <td>${escapeHtml(s.planName)}</td>
+                <td style="font-size:0.8rem;">${escapeHtml(s.startDate)} → ${escapeHtml(s.endDate)}</td>
+                <td>${statusBadge(escapeHtml(s.status))}</td>
+            </tr>`).join('');
+    }
+
+    // Payments
+    const customerPayments = DB.payments.filter(p => p.customerId === id);
+    const totalSpend = customerPayments.filter(p => p.status === 'Paid').reduce((sum, p) => sum + Number(p.amount), 0);
+    const totalSpendEl = document.getElementById('cprofile-total-spend');
+    if (totalSpendEl) totalSpendEl.textContent = `₹${totalSpend.toLocaleString('en-IN')}`;
+    const txCountEl = document.getElementById('cprofile-tx-count');
+    if (txCountEl) txCountEl.textContent = customerPayments.length;
+
+    const payTbody = document.getElementById('cprofile-payments-tbody');
+    if (payTbody) {
+        payTbody.innerHTML = customerPayments.length === 0
+            ? `<tr><td colspan="4" style="text-align:center;padding:16px;color:var(--text-muted);">No payments yet.</td></tr>`
+            : customerPayments.map(p => `<tr>
+                <td class="col-id">#${escapeHtml(p.id)}</td>
+                <td style="font-weight:600;">₹${Number(p.amount).toLocaleString('en-IN')}</td>
+                <td>${escapeHtml(p.paymentDate)}</td>
+                <td>${statusBadge(escapeHtml(p.status))}</td>
+            </tr>`).join('');
+    }
+
+    openModal('customer-profile-modal');
 }
 
 function openAddCustomer() {
@@ -522,11 +643,13 @@ async function deleteCustomerConfirmed() {
     }
 }
 function searchCustomers() {
+    paginationState['customers'].page = 1;
     customerSearchQuery = (document.getElementById('customer-search') || {}).value || '';
     const results = filterData(DB.customers, customerSearchQuery, ['id','name','email','phone']);
     renderCustomerTable(results);
 }
 async function refreshCustomers() {
+    paginationState['customers'].page = 1;
     try {
         await loadBackendData();
     } catch (error) {
@@ -712,9 +835,12 @@ function renderSubTable(data) {
     if (!tbody) return;
     if (data.length === 0) {
         tbody.innerHTML = `<tr><td colspan="8"><div class="empty-state"><h3>No subscriptions found</h3></div></td></tr>`;
+        const pg = document.getElementById('sub-pagination'); if (pg) pg.innerHTML = '';
+        const countEl = document.getElementById('sub-count'); if (countEl) countEl.textContent = 'Showing 0 record(s)';
         return;
     }
-    tbody.innerHTML = data.map(s => `
+    const { paginatedData, start, totalRecords } = paginate(data, 'subscriptions');
+    tbody.innerHTML = paginatedData.map(s => `
         <tr>
             <td class="col-id">${escapeHtml(s.id)}</td>
             <td><div class="cell-name">${escapeHtml(s.customerName)}</div></td>
@@ -734,7 +860,8 @@ function renderSubTable(data) {
                 </button>
             </div></td>
         </tr>`).join('');
-    const countEl = document.getElementById('sub-count'); if(countEl) countEl.textContent=`Showing ${data.length} record(s)`;
+    const countEl = document.getElementById('sub-count');
+    if (countEl) countEl.textContent = `Showing ${start + 1}–${Math.min(start + paginatedData.length, totalRecords)} of ${totalRecords} record(s)`;
 }
 
 function openAddSub() {
@@ -814,6 +941,7 @@ async function deleteSubConfirmed() {
     }
 }
 function filterSubs() {
+    paginationState['subscriptions'].page = 1;
     const query  = (document.getElementById('sub-search') || {}).value || '';
     const planF  = (document.getElementById('sub-plan-filter') || {}).value || '';
     const statusF= (document.getElementById('sub-status-filter') || {}).value || '';
@@ -824,6 +952,7 @@ function filterSubs() {
     renderSubTable(data);
 }
 async function refreshSubs() {
+    paginationState['subscriptions'].page = 1;
     try {
         await loadBackendData();
     } catch (error) {
@@ -860,9 +989,12 @@ function renderPaymentTable(data) {
     if (!tbody) return;
     if (data.length === 0) {
         tbody.innerHTML = `<tr><td colspan="7"><div class="empty-state"><h3>No payments found</h3></div></td></tr>`;
+        const pg = document.getElementById('payment-pagination'); if (pg) pg.innerHTML = '';
+        const countEl = document.getElementById('payment-count'); if (countEl) countEl.textContent = 'Showing 0 record(s)';
         return;
     }
-    tbody.innerHTML = data.map(p => `
+    const { paginatedData, start, totalRecords } = paginate(data, 'payments');
+    tbody.innerHTML = paginatedData.map(p => `
         <tr>
             <td class="col-id">${escapeHtml(p.id)}</td>
             <td><div class="cell-name">${escapeHtml(p.customerName)}</div></td>
@@ -885,7 +1017,8 @@ function renderPaymentTable(data) {
                 </button>
             </div></td>
         </tr>`).join('');
-    const countEl = document.getElementById('payment-count'); if(countEl) countEl.textContent=`Showing ${data.length} record(s)`;
+    const countEl = document.getElementById('payment-count');
+    if (countEl) countEl.textContent = `Showing ${start + 1}–${Math.min(start + paginatedData.length, totalRecords)} of ${totalRecords} record(s)`;
 }
 function openAddPayment() {
     editingPayId = null;
@@ -961,10 +1094,12 @@ async function deletePaymentConfirmed() {
     }
 }
 function searchPayments() {
+    paginationState['payments'].page = 1;
     const q = (document.getElementById('payment-search') || {}).value || '';
     renderPaymentTable(filterData(DB.payments, q, ['id','customerName','planName']));
 }
 async function refreshPayments() {
+    paginationState['payments'].page = 1;
     try {
         await loadBackendData();
     } catch (error) {

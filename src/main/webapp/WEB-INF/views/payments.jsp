@@ -116,6 +116,7 @@
                 </table>
                 <div class="table-footer">
                     <span id="payment-count">Loading…</span>
+                    <div class="pagination-controls" id="payment-pagination" style="display:flex;align-items:center;gap:6px;"></div>
                 </div>
             </div>
 

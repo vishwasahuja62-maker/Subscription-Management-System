@@ -135,6 +135,7 @@
                 </table>
                 <div class="table-footer">
                     <span id="customer-count">Loading…</span>
+                    <div class="pagination-controls" id="customer-pagination" style="display:flex;align-items:center;gap:6px;"></div>
                 </div>
             </div>
 
@@ -261,6 +262,88 @@
     </div>
 </div>
 
+
+<!-- ── Customer 360 Profile & History Modal ── -->
+<div class="modal-overlay" id="customer-profile-modal" role="dialog" aria-modal="true">
+    <div class="modal modal-lg" style="max-width: 760px;">
+        <div class="modal-header" style="padding: 18px 28px;">
+            <div style="display:flex; align-items:center; gap:12px;">
+                <div class="avatar" id="cprofile-avatar" style="width:42px; height:42px; font-size:1.1rem;">C</div>
+                <div>
+                    <h2 class="modal-title" id="cprofile-name" style="margin:0; font-size:1.25rem;">Customer Profile</h2>
+                    <div style="font-size:0.8rem; color:var(--text-muted);" id="cprofile-subtitle">Customer 360° View</div>
+                </div>
+            </div>
+            <button class="modal-close" onclick="closeModal('customer-profile-modal')" aria-label="Close modal">&times;</button>
+        </div>
+        <div class="modal-body" style="padding: 24px 28px;">
+            <!-- Customer Quick Stats -->
+            <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap:16px; margin-bottom: 24px;">
+                <div style="background:rgba(0,0,0,0.02); padding:14px 16px; border-radius:var(--border-radius-md); border:1px solid var(--border-color);">
+                    <div style="font-size:0.75rem; text-transform:uppercase; color:var(--text-muted); font-weight:700;">Account Status</div>
+                    <div id="cprofile-status-badge" style="margin-top:6px;"></div>
+                </div>
+                <div style="background:rgba(0,0,0,0.02); padding:14px 16px; border-radius:var(--border-radius-md); border:1px solid var(--border-color);">
+                    <div style="font-size:0.75rem; text-transform:uppercase; color:var(--text-muted); font-weight:700;">Total Paid Spend</div>
+                    <div id="cprofile-total-spend" style="font-size:1.3rem; font-weight:800; color:var(--color-success); margin-top:4px;">₹0</div>
+                </div>
+                <div style="background:rgba(0,0,0,0.02); padding:14px 16px; border-radius:var(--border-radius-md); border:1px solid var(--border-color);">
+                    <div style="font-size:0.75rem; text-transform:uppercase; color:var(--text-muted); font-weight:700;">Active Plans</div>
+                    <div id="cprofile-active-plans" style="font-size:1.3rem; font-weight:800; color:var(--color-primary); margin-top:4px;">0</div>
+                </div>
+            </div>
+
+            <!-- Contact & Demographics Details -->
+            <div style="margin-bottom: 24px; padding:16px 20px; background:var(--bg-app); border-radius:var(--border-radius-md); font-size:0.875rem;">
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:12px;">
+                    <div><strong>Email:</strong> <span id="cprofile-email" style="color:var(--text-secondary);"></span></div>
+                    <div><strong>Phone:</strong> <span id="cprofile-phone" style="color:var(--text-secondary);"></span></div>
+                    <div><strong>Date of Birth:</strong> <span id="cprofile-dob" style="color:var(--text-secondary);"></span></div>
+                    <div><strong>Address:</strong> <span id="cprofile-address" style="color:var(--text-secondary);"></span></div>
+                </div>
+            </div>
+
+            <!-- Subscriptions Tab/Header -->
+            <h4 style="margin:0 0 12px 0; font-size:0.95rem; color:var(--text-primary); display:flex; align-items:center; gap:8px;">
+                <span>📜</span> Subscriptions History
+            </h4>
+            <div class="table-wrapper" style="margin-bottom: 24px; border:1px solid var(--border-color); border-radius:var(--border-radius-md);">
+                <table class="data-table" style="font-size:0.85rem;">
+                    <thead>
+                        <tr>
+                            <th>Sub ID</th>
+                            <th>Plan</th>
+                            <th>Cycle</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cprofile-subs-tbody"></tbody>
+                </table>
+            </div>
+
+            <!-- Payments History -->
+            <h4 style="margin:0 0 12px 0; font-size:0.95rem; color:var(--text-primary); display:flex; align-items:center; gap:8px;">
+                <span>💳</span> Payment Transactions
+            </h4>
+            <div class="table-wrapper" style="border:1px solid var(--border-color); border-radius:var(--border-radius-md);">
+                <table class="data-table" style="font-size:0.85rem;">
+                    <thead>
+                        <tr>
+                            <th>Payment ID</th>
+                            <th>Amount</th>
+                            <th>Date</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cprofile-payments-tbody"></tbody>
+                </table>
+            </div>
+        </div>
+        <div class="modal-footer" style="padding: 16px 28px;">
+            <button class="btn btn-secondary" onclick="closeModal('customer-profile-modal')">Close</button>
+        </div>
+    </div>
+</div>
 
 <script src="${pageContext.request.contextPath}/js/app.js"></script>
 <script>

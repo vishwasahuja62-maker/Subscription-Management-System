@@ -128,6 +128,7 @@
                 </table>
                 <div class="table-footer">
                     <span id="sub-count">Loading…</span>
+                    <div class="pagination-controls" id="sub-pagination" style="display:flex;align-items:center;gap:6px;"></div>
                 </div>
             </div>
 
