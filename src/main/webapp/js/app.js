@@ -682,9 +682,16 @@ async function saveCustomer() {
     clearErrors('customer-form');
     let valid = true;
     if (!name)            { showError('cf-name', 'Name is required'); valid = false; }
-    if (!isEmail(email))  { showError('cf-email','Enter a valid email'); valid = false; }
-    if (!isPhone(phone))  { showError('cf-phone','Enter a valid 10-digit phone'); valid = false; }
+    if (!isEmail(email))  { showError('cf-email','Enter a valid email address'); valid = false; }
+    if (!isPhone(phone))  { showError('cf-phone','Enter a valid 10-digit mobile number'); valid = false; }
     if (!dob)             { showError('cf-dob', 'Date of birth is required'); valid = false; }
+    else {
+        const todayStr = new Date().toISOString().split('T')[0];
+        if (dob >= todayStr) {
+            showError('cf-dob', 'Date of birth cannot be today or a future date');
+            valid = false;
+        }
+    }
     if (!address)         { showError('cf-address','Address is required'); valid = false; }
     if (!valid) return;
 
