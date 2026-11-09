@@ -84,6 +84,12 @@
                                placeholder="Search by customer or plan…"
                                oninput="searchPayments()" aria-label="Search payments">
                     </div>
+                    <select id="payment-status-filter" class="form-control" style="width: auto; padding: 6px 12px; font-size: 0.85rem;" onchange="searchPayments()" aria-label="Filter by payment status">
+                        <option value="">All Statuses</option>
+                        <option value="Paid">Paid</option>
+                        <option value="Pending">Pending</option>
+                        <option value="Failed">Failed</option>
+                    </select>
                     <button class="btn btn-primary btn-sm" onclick="searchPayments()" id="payment-search-btn">Search</button>
                     <button class="btn btn-secondary btn-sm" onclick="refreshPayments()" id="payment-refresh-btn">
                         <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="none"
