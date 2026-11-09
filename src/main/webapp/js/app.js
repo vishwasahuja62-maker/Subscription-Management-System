@@ -789,7 +789,7 @@ function renderPlanTable(data) {
     }
     tbody.innerHTML = data.map(p => `
         <tr>
-            <td class="col-id">${escapeHtml(p.id)}</td>
+            <td class="col-id" style="font-weight:700; letter-spacing:0.3px;">${escapeHtml(formatCode('PLAN', p.id))}</td>
             <td><div class="cell-name">${escapeHtml(p.name)}</div></td>
             <td>${p.duration} ${p.durationUnit}</td>
             <td>₹${p.price.toLocaleString('en-IN')}</td>
