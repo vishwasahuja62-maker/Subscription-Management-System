@@ -1238,6 +1238,12 @@ async function generateReport() {
                 </div>
             </div>
             <div style="display: flex; gap: 10px;">
+                <button class="btn btn-sm btn-outline" onclick="printReportResults()">
+                    <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                    </svg>
+                    Print Report
+                </button>
                 <button class="btn btn-sm btn-outline" onclick="exportReportToCSV()">
                     <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
                     Download CSV
@@ -1411,6 +1417,48 @@ async function generateReport() {
         </div>`;
         showToast(error.message, 'danger');
     }
+}
+
+function printReportResults() {
+    const reportContainer = document.getElementById('report-results');
+    if (!reportContainer) return;
+    const printWindow = window.open('', '', 'height=750,width=900');
+    printWindow.document.write(`
+        <html>
+            <head>
+                <title>Subscription Management System - Analytical Report</title>
+                <style>
+                    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 32px; color: #1e293b; }
+                    table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 14px; }
+                    th, td { border: 1px solid #cbd5e1; padding: 10px 14px; }
+                    th { background: #f1f5f9; text-align: left; font-weight: 700; }
+                    .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; }
+                    .badge-active { background: #dcfce7; color: #15803d; }
+                    .badge-pending { background: #fef9c3; color: #854d0e; }
+                    .badge-failed { background: #fee2e2; color: #b91c1c; }
+                    button { display: none !important; }
+                    @media print {
+                        body { padding: 0; }
+                        button { display: none !important; }
+                    }
+                </style>
+            </head>
+            <body>
+                <div style="text-align: center; margin-bottom: 24px; border-bottom: 2px solid #0f172a; padding-bottom: 12px;">
+                    <h2 style="margin: 0; font-size: 20px; text-transform: uppercase;">Subscription Management System</h2>
+                    <p style="margin: 4px 0 0 0; color: #64748b; font-size: 13px;">Official Analytical Report — Generated on \${new Date().toLocaleString()}</p>
+                </div>
+                \${reportContainer.innerHTML}
+                <script>
+                    window.onload = function() {
+                        window.print();
+                        window.close();
+                    };
+                <\/script>
+            </body>
+        </html>
+    `);
+    printWindow.document.close();
 }
 
 function viewInvoice(id) {
