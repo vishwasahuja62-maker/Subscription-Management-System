@@ -146,14 +146,14 @@
                     </button>
                 </div>
                 <div class="card-body" style="padding:0;">
-                    <div class="table-wrapper" style="border:none; box-shadow:none; border-radius:0;">
-                        <table class="data-table" style="font-size:0.85rem;">
+                    <div class="table-wrapper" style="border:none; box-shadow:none; border-radius:0; overflow-x:auto;">
+                        <table class="data-table" style="font-size:0.85rem; width:100%; border-collapse:collapse;">
                             <thead>
                                 <tr>
-                                    <th style="padding-left:24px;">Module</th>
-                                    <th>Activity Description</th>
-                                    <th>Date</th>
-                                    <th style="text-align:right; padding-right:24px;">Status</th>
+                                    <th style="padding:12px 18px; width:120px;">Module</th>
+                                    <th style="padding:12px 18px;">Activity Description</th>
+                                    <th style="padding:12px 18px; width:130px;">Date</th>
+                                    <th style="padding:12px 18px; width:120px; text-align:right;">Status</th>
                                 </tr>
                             </thead>
                             <tbody id="audit-logs-tbody">
