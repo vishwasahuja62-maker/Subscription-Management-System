@@ -1440,33 +1440,81 @@ async function generateReport() {
 function printReportResults() {
     const reportContainer = document.getElementById('report-results');
     if (!reportContainer) return;
+
+    // Clone report content so we can remove buttons/actions cleanly for paper print
+    const contentClone = reportContainer.cloneNode(true);
+    contentClone.querySelectorAll('button').forEach(btn => btn.remove());
+
     const printWindow = window.open('', '', 'height=750,width=900');
+    const currentDate = new Date().toLocaleString();
+
     printWindow.document.write(`
+        <!DOCTYPE html>
         <html>
             <head>
                 <title>Subscription Management System - Analytical Report</title>
                 <style>
-                    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: 32px; color: #1e293b; }
-                    table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 14px; }
-                    th, td { border: 1px solid #cbd5e1; padding: 10px 14px; }
-                    th { background: #f1f5f9; text-align: left; font-weight: 700; }
-                    .badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: 600; }
+                    body {
+                        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+                        padding: 30px;
+                        color: #1e293b;
+                        background: #fff;
+                    }
+                    .header-banner {
+                        text-align: center;
+                        margin-bottom: 24px;
+                        border-bottom: 2px solid #0f172a;
+                        padding-bottom: 12px;
+                    }
+                    .header-banner h2 {
+                        margin: 0;
+                        font-size: 22px;
+                        text-transform: uppercase;
+                        letter-spacing: 0.5px;
+                        color: #0f172a;
+                    }
+                    .header-banner p {
+                        margin: 4px 0 0 0;
+                        color: #64748b;
+                        font-size: 13px;
+                    }
+                    table {
+                        width: 100%;
+                        border-collapse: collapse;
+                        margin-top: 16px;
+                        margin-bottom: 20px;
+                        font-size: 13px;
+                    }
+                    th, td {
+                        border: 1px solid #cbd5e1;
+                        padding: 10px 12px;
+                    }
+                    th {
+                        background: #f8fafc;
+                        font-weight: 700;
+                        color: #334155;
+                    }
+                    .badge {
+                        display: inline-block;
+                        padding: 2px 8px;
+                        border-radius: 4px;
+                        font-size: 11px;
+                        font-weight: 600;
+                    }
                     .badge-active { background: #dcfce7; color: #15803d; }
                     .badge-pending { background: #fef9c3; color: #854d0e; }
                     .badge-failed { background: #fee2e2; color: #b91c1c; }
-                    button { display: none !important; }
                     @media print {
                         body { padding: 0; }
-                        button { display: none !important; }
                     }
                 </style>
             </head>
             <body>
-                <div style="text-align: center; margin-bottom: 24px; border-bottom: 2px solid #0f172a; padding-bottom: 12px;">
-                    <h2 style="margin: 0; font-size: 20px; text-transform: uppercase;">Subscription Management System</h2>
-                    <p style="margin: 4px 0 0 0; color: #64748b; font-size: 13px;">Official Analytical Report — Generated on \${new Date().toLocaleString()}</p>
+                <div class="header-banner">
+                    <h2>Subscription Management System</h2>
+                    <p>Official Analytical Report — Generated on ${currentDate}</p>
                 </div>
-                \${reportContainer.innerHTML}
+                ${contentClone.innerHTML}
                 <script>
                     window.onload = function() {
                         window.print();
