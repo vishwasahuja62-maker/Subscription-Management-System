@@ -1686,6 +1686,86 @@ function exportReportToCSV() {
 }
 
 /* ================================================================
+   ── SETTINGS & SYSTEM DIAGNOSTICS ──
+   ================================================================ */
+function loadGeneralPreferences() {
+    const appName = localStorage.getItem('sms_app_name') || 'Subscription Management System';
+    const currency = localStorage.getItem('sms_currency') || 'INR';
+    const timezone = localStorage.getItem('sms_timezone') || 'Asia/Kolkata';
+
+    const nameEl = document.getElementById('pref-app-name');
+    if (nameEl) nameEl.value = appName;
+    const curEl = document.getElementById('pref-currency');
+    if (curEl) curEl.value = currency;
+    const tzEl = document.getElementById('pref-timezone');
+    if (tzEl) tzEl.value = timezone;
+
+    // Apply to sidebar brand if present
+    document.querySelectorAll('.brand-text, .login-title').forEach(el => {
+        el.textContent = appName;
+    });
+}
+
+function saveGeneralPreferences(e) {
+    if (e) e.preventDefault();
+    const appName = document.getElementById('pref-app-name')?.value.trim();
+    const currency = document.getElementById('pref-currency')?.value || 'INR';
+    const timezone = document.getElementById('pref-timezone')?.value || 'Asia/Kolkata';
+
+    if (!appName) {
+        showToast('Application name cannot be empty', 'warning');
+        return;
+    }
+
+    localStorage.setItem('sms_app_name', appName);
+    localStorage.setItem('sms_currency', currency);
+    localStorage.setItem('sms_timezone', timezone);
+
+    loadGeneralPreferences();
+    showToast('Preferences saved successfully! Changes applied.');
+}
+
+async function loadSystemInfo() {
+    const dbStatusEl = document.getElementById('diag-db-status');
+    const dbNameEl = document.getElementById('diag-db-name');
+    const serverInfoEl = document.getElementById('diag-server-info');
+    const javaVerEl = document.getElementById('diag-java-ver');
+    const recordsCountEl = document.getElementById('diag-records-count');
+
+    if (!dbStatusEl) return;
+
+    dbStatusEl.innerHTML = `<span style="color:var(--text-muted);">Pinging MySQL...</span>`;
+
+    try {
+        const info = await requestApi('SettingsServlet', 'systemInfo');
+        if (info.dbConnected) {
+            dbStatusEl.innerHTML = `<span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--color-success); margin-right:6px;"></span> Connected`;
+            dbStatusEl.style.color = 'var(--color-success)';
+            if (dbNameEl) dbNameEl.textContent = `Catalog: ${escapeHtml(info.dbCatalog || 'subscription_management')}`;
+        } else {
+            dbStatusEl.innerHTML = `<span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--color-danger); margin-right:6px;"></span> Disconnected`;
+            dbStatusEl.style.color = 'var(--color-danger)';
+            if (dbNameEl) dbNameEl.textContent = `Error: ${escapeHtml(info.dbError || 'Connection failed')}`;
+        }
+
+        if (serverInfoEl) serverInfoEl.textContent = info.serverInfo || 'Apache Tomcat 9.0';
+        if (javaVerEl) javaVerEl.textContent = `Java: ${info.javaVersion || 'OpenJDK'}`;
+        if (recordsCountEl) {
+            recordsCountEl.textContent = `${info.totalCustomers || 0} Cust • ${info.totalSubscriptions || 0} Subs • ${info.totalPayments || 0} Pay`;
+        }
+    } catch (err) {
+        dbStatusEl.innerHTML = `<span style="color:var(--color-danger);">Offline</span>`;
+    }
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+    loadGeneralPreferences();
+    if (document.getElementById('diag-db-status')) {
+        loadSystemInfo();
+    }
+});
+
+/* ================================================================
    ── LOGIN ──
    ================================================================ */
 function doLogin(e) {
