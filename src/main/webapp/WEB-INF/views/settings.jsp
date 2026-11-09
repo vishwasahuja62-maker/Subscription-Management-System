@@ -53,37 +53,82 @@
                 </div>
             </div>
 
+            <!-- General Preferences Card -->
             <div class="card" style="max-width: 800px;">
                 <div class="card-header">
                     <h2 class="card-title">General Preferences</h2>
                 </div>
                 <div class="card-body">
-                    <form onsubmit="event.preventDefault(); showToast('Settings saved successfully!');">
+                    <form id="general-prefs-form" onsubmit="saveGeneralPreferences(event)">
                         <div class="form-group">
-                            <label class="form-label">Application Name</label>
-                            <input type="text" class="form-control" value="Subscription Management System" />
+                            <label class="form-label" for="pref-app-name">Application Name</label>
+                            <input type="text" id="pref-app-name" class="form-control" value="Subscription Management System" required />
                         </div>
                         <div class="form-row form-row-2">
                             <div class="form-group">
-                                <label class="form-label">Currency</label>
-                                <select class="form-control">
-                                    <option value="INR" selected>INR (₹)</option>
-                                    <option value="USD">USD ($)</option>
-                                    <option value="EUR">EUR (€)</option>
+                                <label class="form-label" for="pref-currency">Currency Display</label>
+                                <select id="pref-currency" class="form-control">
+                                    <option value="INR" selected>INR (₹) - Indian Rupee</option>
+                                    <option value="USD">USD ($) - US Dollar</option>
+                                    <option value="EUR">EUR (€) - Euro</option>
                                 </select>
                             </div>
                             <div class="form-group">
-                                <label class="form-label">Timezone</label>
-                                <select class="form-control">
-                                    <option value="IST" selected>Asia/Kolkata (IST)</option>
-                                    <option value="UTC">UTC</option>
+                                <label class="form-label" for="pref-timezone">System Timezone</label>
+                                <select id="pref-timezone" class="form-control">
+                                    <option value="Asia/Kolkata" selected>Asia/Kolkata (IST)</option>
+                                    <option value="UTC">UTC (Universal Coordinated)</option>
                                 </select>
                             </div>
                         </div>
                         <div class="form-group" style="margin-top: 16px;">
-                            <button class="btn btn-primary" type="submit">Save Settings</button>
+                            <button class="btn btn-primary" type="submit" id="save-settings-btn">Save Preferences</button>
                         </div>
                     </form>
+                </div>
+            </div>
+
+            <!-- Live Database & System Health Diagnostics Card -->
+            <div class="card" style="max-width: 800px; margin-top: 24px;">
+                <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <h2 class="card-title" style="margin:0;">System & Database Status</h2>
+                        <p class="page-subtitle" style="margin:4px 0 0 0;">Live backend diagnostics and MySQL connection health</p>
+                    </div>
+                    <button class="btn btn-sm btn-outline" onclick="loadSystemInfo()" title="Refresh Status">
+                        <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                        Check Status
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:16px; margin-bottom:16px;">
+                        <div style="background:rgba(0,0,0,0.02); padding:14px 18px; border-radius:var(--border-radius-md); border:1px solid var(--border-color);">
+                            <div style="font-size:0.75rem; text-transform:uppercase; color:var(--text-muted); font-weight:700;">MySQL Database</div>
+                            <div id="diag-db-status" style="margin-top:6px; font-weight:700; color:var(--color-success); font-size:1rem; display:flex; align-items:center; gap:6px;">
+                                <span style="display:inline-block; width:8px; height:8px; border-radius:50%; background:var(--color-success);"></span>
+                                Checking...
+                            </div>
+                            <div id="diag-db-name" style="font-size:0.8rem; color:var(--text-secondary); margin-top:4px;">Catalog: subscription_management</div>
+                        </div>
+
+                        <div style="background:rgba(0,0,0,0.02); padding:14px 18px; border-radius:var(--border-radius-md); border:1px solid var(--border-color);">
+                            <div style="font-size:0.75rem; text-transform:uppercase; color:var(--text-muted); font-weight:700;">Servlet Container</div>
+                            <div id="diag-server-info" style="margin-top:6px; font-weight:700; color:var(--text-primary); font-size:0.95rem;">
+                                Loading...
+                            </div>
+                            <div id="diag-java-ver" style="font-size:0.8rem; color:var(--text-secondary); margin-top:4px;">Java: OpenJDK</div>
+                        </div>
+
+                        <div style="background:rgba(0,0,0,0.02); padding:14px 18px; border-radius:var(--border-radius-md); border:1px solid var(--border-color);">
+                            <div style="font-size:0.75rem; text-transform:uppercase; color:var(--text-muted); font-weight:700;">Database Records</div>
+                            <div id="diag-records-count" style="margin-top:6px; font-weight:700; color:var(--color-primary); font-size:1.1rem;">
+                                ...
+                            </div>
+                            <div style="font-size:0.8rem; color:var(--text-secondary); margin-top:4px;">Customers • Subs • Payments</div>
+                        </div>
+                    </div>
                 </div>
             </div>
             <!-- Security Card -->
