@@ -1,13 +1,19 @@
 package com.subscription.servlet;
 
+import com.subscription.dao.DBConnection;
 import com.subscription.dao.UserDAO;
 import com.subscription.model.User;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.*;
 import java.io.IOException;
+import java.sql.Connection;
+import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.sql.Statement;
 import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
 
 @WebServlet("/SettingsServlet")
 public class SettingsServlet extends HttpServlet {
@@ -17,6 +23,36 @@ public class SettingsServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse res)
             throws ServletException, IOException {
+        String action = req.getParameter("action");
+        if ("systemInfo".equals(action)) {
+            Map<String, Object> info = new HashMap<>();
+            info.put("serverInfo", getServletContext().getServerInfo());
+            info.put("javaVersion", System.getProperty("java.version"));
+            info.put("osName", System.getProperty("os.name"));
+
+            try (Connection conn = DBConnection.getConnection();
+                 Statement stmt = conn.createStatement()) {
+                info.put("dbConnected", true);
+                info.put("dbCatalog", conn.getCatalog());
+
+                try (ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM customers")) {
+                    if (rs.next()) info.put("totalCustomers", rs.getInt(1));
+                }
+                try (ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM subscriptions")) {
+                    if (rs.next()) info.put("totalSubscriptions", rs.getInt(1));
+                }
+                try (ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM payments")) {
+                    if (rs.next()) info.put("totalPayments", rs.getInt(1));
+                }
+            } catch (SQLException e) {
+                info.put("dbConnected", false);
+                info.put("dbError", e.getMessage());
+            }
+
+            ServletSupport.writeJson(res, HttpServletResponse.SC_OK, info);
+            return;
+        }
+
         req.getRequestDispatcher("/WEB-INF/views/settings.jsp").forward(req, res);
     }
 
