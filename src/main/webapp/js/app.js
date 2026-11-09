@@ -725,7 +725,11 @@ async function deleteCustomerConfirmed() {
 function searchCustomers() {
     paginationState['customers'].page = 1;
     customerSearchQuery = (document.getElementById('customer-search') || {}).value || '';
-    const results = filterData(DB.customers, customerSearchQuery, ['id','name','email','phone']);
+    const statusFilter = (document.getElementById('customer-status-filter') || {}).value || '';
+    let results = filterData(DB.customers, customerSearchQuery, ['id','name','email','phone']);
+    if (statusFilter) {
+        results = results.filter(c => c.status === statusFilter);
+    }
     renderCustomerTable(results);
 }
 async function refreshCustomers() {
@@ -737,6 +741,7 @@ async function refreshCustomers() {
         return;
     }
     const el = document.getElementById('customer-search'); if (el) el.value = '';
+    const stEl = document.getElementById('customer-status-filter'); if (stEl) stEl.value = '';
     customerSearchQuery = '';
     renderCustomerTable(DB.customers);
 }
@@ -1176,7 +1181,12 @@ async function deletePaymentConfirmed() {
 function searchPayments() {
     paginationState['payments'].page = 1;
     const q = (document.getElementById('payment-search') || {}).value || '';
-    renderPaymentTable(filterData(DB.payments, q, ['id','customerName','planName']));
+    const statusFilter = (document.getElementById('payment-status-filter') || {}).value || '';
+    let results = filterData(DB.payments, q, ['id','customerName','planName']);
+    if (statusFilter) {
+        results = results.filter(p => p.status === statusFilter);
+    }
+    renderPaymentTable(results);
 }
 async function refreshPayments() {
     paginationState['payments'].page = 1;
@@ -1187,6 +1197,7 @@ async function refreshPayments() {
         return;
     }
     const el = document.getElementById('payment-search'); if (el) el.value = '';
+    const stEl = document.getElementById('payment-status-filter'); if (stEl) stEl.value = '';
     renderPaymentTable(DB.payments);
 }
 
