@@ -101,6 +101,11 @@
                                placeholder="Search by name, email, phone…"
                                oninput="searchCustomers()" aria-label="Search customers">
                     </div>
+                    <select id="customer-status-filter" class="form-control" style="width: auto; padding: 6px 12px; font-size: 0.85rem;" onchange="searchCustomers()" aria-label="Filter by status">
+                        <option value="">All Statuses</option>
+                        <option value="Active">Active</option>
+                        <option value="Inactive">Inactive</option>
+                    </select>
                     <button class="btn btn-primary btn-sm" onclick="searchCustomers()" id="customer-search-btn">
                         Search
                     </button>
