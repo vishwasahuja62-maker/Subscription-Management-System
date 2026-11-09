@@ -1791,12 +1791,12 @@ async function loadAuditLogs() {
 
         tbody.innerHTML = logs.map(l => `
             <tr>
-                <td style="padding-left:24px;">
-                    <span class="badge ${l.module === 'Billing' ? 'badge-active' : 'badge-pending'}">${escapeHtml(l.module)}</span>
+                <td style="padding:14px 18px;">
+                    <span class="badge ${l.module === 'Billing' ? 'badge-active' : 'badge-pending'}" style="font-size:0.75rem; padding:3px 8px;">${escapeHtml(l.module)}</span>
                 </td>
-                <td style="font-weight:600; color:var(--text-primary);">${escapeHtml(l.action)}</td>
-                <td style="color:var(--text-secondary); font-size:0.8rem;">${escapeHtml(l.timestamp)}</td>
-                <td style="text-align:right; padding-right:24px;">${statusBadge(escapeHtml(l.status))}</td>
+                <td style="padding:14px 18px; font-weight:600; color:var(--text-primary); line-height:1.4;">${escapeHtml(l.action)}</td>
+                <td style="padding:14px 18px; color:var(--text-secondary); font-size:0.8rem; white-space:nowrap;">${escapeHtml(l.timestamp)}</td>
+                <td style="padding:14px 18px; text-align:right;">${statusBadge(escapeHtml(l.status))}</td>
             </tr>
         `).join('');
     } catch (err) {
