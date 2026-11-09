@@ -1076,7 +1076,22 @@ function populateSubscriptionSelects() {
     sel.innerHTML = '<option value="">-- Select Subscription --</option>' +
         DB.subscriptions.map(s => `<option value="${escapeHtml(s.id)}" ${s.id===cur?'selected':''}>${escapeHtml(s.id)} – ${escapeHtml(s.customerName)} (${escapeHtml(s.planName)})</option>`).join('');
 }
+function updatePaymentSummaryBar(data) {
+    const list = data || DB.payments;
+    const totalCount = list.length;
+    const totalPaid = list.filter(p => p.status === 'Paid').reduce((sum, p) => sum + Number(p.amount || 0), 0);
+    const totalPending = list.filter(p => p.status !== 'Paid').reduce((sum, p) => sum + Number(p.amount || 0), 0);
+
+    const countEl = document.getElementById('psum-total-count');
+    if (countEl) countEl.textContent = totalCount;
+    const paidEl = document.getElementById('psum-total-paid');
+    if (paidEl) paidEl.textContent = '₹' + totalPaid.toLocaleString('en-IN');
+    const pendingEl = document.getElementById('psum-total-pending');
+    if (pendingEl) pendingEl.textContent = '₹' + totalPending.toLocaleString('en-IN');
+}
+
 function renderPaymentTable(data) {
+    updatePaymentSummaryBar(data);
     const tbody = document.getElementById('payment-tbody');
     if (!tbody) return;
     if (data.length === 0) {
