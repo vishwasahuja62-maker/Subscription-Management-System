@@ -29,7 +29,7 @@
                     </div>
                 </div>
             </div>
-                        <div class="topbar-right">
+            <div class="topbar-right">
                 <button class="notif-btn btn" id="dark-mode-btn" onclick="toggleDarkMode()" title="Toggle Dark Mode" aria-label="Toggle Dark Mode">
                     <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"/>
@@ -49,11 +49,11 @@
             <div class="page-header">
                 <div class="page-header-left">
                     <h1>System Settings</h1>
-                    <p class="page-subtitle">Configure your application preferences</p>
+                    <p class="page-subtitle">Configure system automation, maintenance, and security</p>
                 </div>
             </div>
 
-            <!-- System Automated Maintenance & Expiry Sync Card -->
+            <!-- 1. System Automated Maintenance & Expiry Sync Card -->
             <div class="card" style="max-width: 800px;">
                 <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
                     <div>
@@ -85,42 +85,7 @@
                 </div>
             </div>
 
-            <!-- System Audit Trail & Security Activity Card -->
-            <div class="card" style="max-width: 800px; margin-top: 24px;">
-                <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
-                    <div>
-                        <h2 class="card-title" style="margin:0; display:flex; align-items:center; gap:8px;">
-                            <span>🛡️</span> System Audit Trail & Activity Logs
-                        </h2>
-                        <p class="page-subtitle" style="margin:4px 0 0 0;">Accountability records of database transactions, status changes, and billing actions</p>
-                    </div>
-                    <button class="btn btn-sm btn-outline" onclick="loadAuditLogs()" title="Refresh Logs">
-                        <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                        </svg>
-                        Refresh Logs
-                    </button>
-                </div>
-                <div class="card-body" style="padding:0;">
-                    <div class="table-wrapper" style="border:none; box-shadow:none; border-radius:0;">
-                        <table class="data-table" style="font-size:0.85rem;">
-                            <thead>
-                                <tr>
-                                    <th style="padding-left:24px;">Module</th>
-                                    <th>Activity Description</th>
-                                    <th>Date</th>
-                                    <th style="text-align:right; padding-right:24px;">Status</th>
-                                </tr>
-                            </thead>
-                            <tbody id="audit-logs-tbody">
-                                <tr><td colspan="4" style="text-align:center; padding:24px; color:var(--text-muted);">Loading audit history...</td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Live Database & System Health Diagnostics Card -->
+            <!-- 2. System & Database Health Diagnostics Card -->
             <div class="card" style="max-width: 800px; margin-top: 24px;">
                 <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
                     <div>
@@ -135,7 +100,7 @@
                     </button>
                 </div>
                 <div class="card-body">
-                    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:16px; margin-bottom:16px;">
+                    <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap:16px;">
                         <div style="background:rgba(0,0,0,0.02); padding:14px 18px; border-radius:var(--border-radius-md); border:1px solid var(--border-color);">
                             <div style="font-size:0.75rem; text-transform:uppercase; color:var(--text-muted); font-weight:700;">MySQL Database</div>
                             <div id="diag-db-status" style="margin-top:6px; font-weight:700; color:var(--color-success); font-size:1rem; display:flex; align-items:center; gap:6px;">
@@ -163,7 +128,43 @@
                     </div>
                 </div>
             </div>
-            <!-- Security Card -->
+
+            <!-- 3. System Audit Trail & Security Activity Card -->
+            <div class="card" style="max-width: 800px; margin-top: 24px;">
+                <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <h2 class="card-title" style="margin:0; display:flex; align-items:center; gap:8px;">
+                            <span>🛡️</span> System Audit Trail & Activity Logs
+                        </h2>
+                        <p class="page-subtitle" style="margin:4px 0 0 0;">Live tracking of database transactions, subscription allocations, and billing events</p>
+                    </div>
+                    <button class="btn btn-sm btn-outline" onclick="loadAuditLogs()" title="Refresh Logs">
+                        <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                        Refresh Logs
+                    </button>
+                </div>
+                <div class="card-body" style="padding:0;">
+                    <div class="table-wrapper" style="border:none; box-shadow:none; border-radius:0;">
+                        <table class="data-table" style="font-size:0.85rem;">
+                            <thead>
+                                <tr>
+                                    <th style="padding-left:24px;">Module</th>
+                                    <th>Activity Description</th>
+                                    <th>Date</th>
+                                    <th style="text-align:right; padding-right:24px;">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="audit-logs-tbody">
+                                <tr><td colspan="4" style="text-align:center; padding:24px; color:var(--text-muted);">Loading audit history...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 4. Security Card -->
             <div class="card" style="max-width: 800px; margin-top: 24px;">
                 <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
                     <div>
@@ -238,14 +239,9 @@
                     <div class="form-error" id="err-confirm-password"></div>
                 </div>
 
-                <div class="modal-footer" style="padding:16px 0 0 0; margin-top:20px;">
+                <div class="modal-footer" style="padding: 16px 0 0 0;">
                     <button type="button" class="btn btn-secondary" onclick="closePasswordModal()">Cancel</button>
-                    <button type="submit" class="btn btn-primary" id="update-pass-btn">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"/>
-                        </svg>
-                        Save New Password
-                    </button>
+                    <button type="submit" class="btn btn-primary" id="update-pass-btn">Update Password</button>
                 </div>
             </form>
         </div>
@@ -317,4 +313,3 @@
 </script>
 </body>
 </html>
-
