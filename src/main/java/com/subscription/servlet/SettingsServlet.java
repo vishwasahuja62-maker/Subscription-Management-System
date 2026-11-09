@@ -53,6 +53,49 @@ public class SettingsServlet extends HttpServlet {
             return;
         }
 
+        if ("auditLogs".equals(action)) {
+            java.util.List<Map<String, String>> logs = new java.util.ArrayList<>();
+            try (Connection conn = DBConnection.getConnection();
+                 Statement stmt = conn.createStatement()) {
+                
+                // Fetch recent payments activity
+                try (ResultSet rs = stmt.executeQuery(
+                        "SELECT p.id, c.name as customer_name, p.amount, p.payment_date, p.payment_status " +
+                        "FROM payments p JOIN customers c ON p.customer_id = c.id " +
+                        "ORDER BY p.id DESC LIMIT 5")) {
+                    while (rs.next()) {
+                        Map<String, String> entry = new HashMap<>();
+                        entry.put("timestamp", rs.getString("payment_date"));
+                        entry.put("module", "Billing");
+                        entry.put("action", "Payment #" + rs.getInt("id") + " recorded (" + rs.getString("customer_name") + " - ₹" + rs.getDouble("amount") + ")");
+                        entry.put("status", rs.getString("payment_status"));
+                        logs.add(entry);
+                    }
+                }
+
+                // Fetch recent subscriptions activity
+                try (ResultSet rs = stmt.executeQuery(
+                        "SELECT s.id, c.name as customer_name, pl.plan_name, s.status, s.start_date " +
+                        "FROM subscriptions s JOIN customers c ON s.customer_id = c.id " +
+                        "JOIN plans pl ON s.plan_id = pl.id " +
+                        "ORDER BY s.id DESC LIMIT 5")) {
+                    while (rs.next()) {
+                        Map<String, String> entry = new HashMap<>();
+                        entry.put("timestamp", rs.getString("start_date"));
+                        entry.put("module", "Subscription");
+                        entry.put("action", "Sub #" + rs.getInt("id") + " assigned: " + rs.getString("plan_name") + " to " + rs.getString("customer_name"));
+                        entry.put("status", rs.getString("status"));
+                        logs.add(entry);
+                    }
+                }
+            } catch (SQLException e) {
+                log("Error fetching audit logs", e);
+            }
+
+            ServletSupport.writeJson(res, HttpServletResponse.SC_OK, Collections.singletonMap("logs", logs));
+            return;
+        }
+
         req.getRequestDispatcher("/WEB-INF/views/settings.jsp").forward(req, res);
     }
 
@@ -96,6 +139,26 @@ public class SettingsServlet extends HttpServlet {
                 log("Unable to update password", e);
                 ServletSupport.writeError(req, res, HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
                         "Database error while updating password.");
+            }
+        } else if ("runExpirySync".equals(action)) {
+            int updatedCount = 0;
+            try (Connection conn = DBConnection.getConnection();
+                 Statement stmt = conn.createStatement()) {
+                // Update active subscriptions whose end date is prior to today
+                updatedCount = stmt.executeUpdate(
+                        "UPDATE subscriptions SET status = 'Expired' " +
+                        "WHERE end_date < CURRENT_DATE() AND status = 'Active'");
+                
+                Map<String, Object> response = new HashMap<>();
+                response.put("updatedCount", updatedCount);
+                response.put("message", updatedCount > 0 
+                        ? updatedCount + " overdue subscription(s) automatically transitioned to Expired."
+                        : "All subscriptions are up-to-date. No expired records found.");
+                ServletSupport.writeJson(res, HttpServletResponse.SC_OK, response);
+            } catch (SQLException e) {
+                log("Unable to run expiry sync", e);
+                ServletSupport.writeError(req, res, HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                        "Database error during subscription sync: " + e.getMessage());
             }
         } else {
             ServletSupport.writeError(req, res, HttpServletResponse.SC_BAD_REQUEST, "Invalid action.");
