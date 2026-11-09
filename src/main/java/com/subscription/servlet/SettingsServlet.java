@@ -57,7 +57,7 @@ public class SettingsServlet extends HttpServlet {
             java.util.List<Map<String, String>> logs = new java.util.ArrayList<>();
             try (Connection conn = DBConnection.getConnection();
                  Statement stmt = conn.createStatement()) {
-                
+
                 // Fetch recent payments activity
                 try (ResultSet rs = stmt.executeQuery(
                         "SELECT p.id, c.name as customer_name, p.amount, p.payment_date, p.payment_status " +
@@ -96,7 +96,34 @@ public class SettingsServlet extends HttpServlet {
             return;
         }
 
+        if ("runExpirySync".equals(action)) {
+            handleExpirySync(req, res);
+            return;
+        }
+
         req.getRequestDispatcher("/WEB-INF/views/settings.jsp").forward(req, res);
+    }
+
+    private void handleExpirySync(HttpServletRequest req, HttpServletResponse res) throws IOException {
+        int updatedCount = 0;
+        try (Connection conn = DBConnection.getConnection();
+             Statement stmt = conn.createStatement()) {
+            // Update active/expiring subscriptions whose end date has passed to 'Inactive' (valid ENUM)
+            updatedCount = stmt.executeUpdate(
+                    "UPDATE subscriptions SET status = 'Inactive' " +
+                    "WHERE end_date < CURRENT_DATE() AND status != 'Inactive'");
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("updatedCount", updatedCount);
+            response.put("message", updatedCount > 0
+                    ? updatedCount + " overdue subscription(s) automatically marked as Inactive."
+                    : "All subscriptions are up-to-date. No overdue active subscriptions found.");
+            ServletSupport.writeJson(res, HttpServletResponse.SC_OK, response);
+        } catch (SQLException e) {
+            log("Unable to run expiry sync", e);
+            ServletSupport.writeError(req, res, HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
+                    "Database error during subscription sync: " + e.getMessage());
+        }
     }
 
     @Override
@@ -141,25 +168,7 @@ public class SettingsServlet extends HttpServlet {
                         "Database error while updating password.");
             }
         } else if ("runExpirySync".equals(action)) {
-            int updatedCount = 0;
-            try (Connection conn = DBConnection.getConnection();
-                 Statement stmt = conn.createStatement()) {
-                // Update active subscriptions whose end date is prior to today
-                updatedCount = stmt.executeUpdate(
-                        "UPDATE subscriptions SET status = 'Expired' " +
-                        "WHERE end_date < CURRENT_DATE() AND status = 'Active'");
-                
-                Map<String, Object> response = new HashMap<>();
-                response.put("updatedCount", updatedCount);
-                response.put("message", updatedCount > 0 
-                        ? updatedCount + " overdue subscription(s) automatically transitioned to Expired."
-                        : "All subscriptions are up-to-date. No expired records found.");
-                ServletSupport.writeJson(res, HttpServletResponse.SC_OK, response);
-            } catch (SQLException e) {
-                log("Unable to run expiry sync", e);
-                ServletSupport.writeError(req, res, HttpServletResponse.SC_INTERNAL_SERVER_ERROR,
-                        "Database error during subscription sync: " + e.getMessage());
-            }
+            handleExpirySync(req, res);
         } else {
             ServletSupport.writeError(req, res, HttpServletResponse.SC_BAD_REQUEST, "Invalid action.");
         }
