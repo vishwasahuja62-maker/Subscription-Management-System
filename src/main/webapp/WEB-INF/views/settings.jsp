@@ -53,38 +53,70 @@
                 </div>
             </div>
 
-            <!-- General Preferences Card -->
+            <!-- System Automated Maintenance & Expiry Sync Card -->
             <div class="card" style="max-width: 800px;">
-                <div class="card-header">
-                    <h2 class="card-title">General Preferences</h2>
+                <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <h2 class="card-title" style="margin:0; display:flex; align-items:center; gap:8px;">
+                            <span>⚡</span> Automated Subscription Expiry Engine
+                        </h2>
+                        <p class="page-subtitle" style="margin:4px 0 0 0;">Synchronize overdue subscriptions and automatically mark them as Expired</p>
+                    </div>
+                    <span class="badge badge-active" style="font-weight:600;">Job Scheduled</span>
                 </div>
                 <div class="card-body">
-                    <form id="general-prefs-form" onsubmit="saveGeneralPreferences(event)">
-                        <div class="form-group">
-                            <label class="form-label" for="pref-app-name">Application Name</label>
-                            <input type="text" id="pref-app-name" class="form-control" value="Subscription Management System" required />
+                    <div style="background:rgba(0,0,0,0.02); padding:16px 20px; border-radius:var(--border-radius-md); border:1px solid var(--border-color); margin-bottom:16px;">
+                        <div style="font-size:0.9rem; color:var(--text-primary); font-weight:600;">Status Sync Policy</div>
+                        <div style="font-size:0.85rem; color:var(--text-secondary); margin-top:4px; line-height:1.5;">
+                            Subscribers whose end date has passed are checked against current MySQL server date (<code>CURRENT_DATE()</code>). When triggered, all overdue <strong>Active</strong> subscriptions automatically transition to <strong>Expired</strong> state.
                         </div>
-                        <div class="form-row form-row-2">
-                            <div class="form-group">
-                                <label class="form-label" for="pref-currency">Currency Display</label>
-                                <select id="pref-currency" class="form-control">
-                                    <option value="INR" selected>INR (₹) - Indian Rupee</option>
-                                    <option value="USD">USD ($) - US Dollar</option>
-                                    <option value="EUR">EUR (€) - Euro</option>
-                                </select>
-                            </div>
-                            <div class="form-group">
-                                <label class="form-label" for="pref-timezone">System Timezone</label>
-                                <select id="pref-timezone" class="form-control">
-                                    <option value="Asia/Kolkata" selected>Asia/Kolkata (IST)</option>
-                                    <option value="UTC">UTC (Universal Coordinated)</option>
-                                </select>
-                            </div>
+                    </div>
+                    <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px;">
+                        <div style="font-size:0.85rem; color:var(--text-muted);" id="sync-last-run-status">
+                            Last checked: <strong id="sync-last-time">Just now</strong>
                         </div>
-                        <div class="form-group" style="margin-top: 16px;">
-                            <button class="btn btn-primary" type="submit" id="save-settings-btn">Save Preferences</button>
-                        </div>
-                    </form>
+                        <button class="btn btn-primary" onclick="triggerExpirySync()" id="btn-trigger-sync" style="display:inline-flex; align-items:center; gap:8px;">
+                            <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+                            </svg>
+                            Run Status Sync Now
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- System Audit Trail & Security Activity Card -->
+            <div class="card" style="max-width: 800px; margin-top: 24px;">
+                <div class="card-header" style="display:flex; justify-content:space-between; align-items:center;">
+                    <div>
+                        <h2 class="card-title" style="margin:0; display:flex; align-items:center; gap:8px;">
+                            <span>🛡️</span> System Audit Trail & Activity Logs
+                        </h2>
+                        <p class="page-subtitle" style="margin:4px 0 0 0;">Accountability records of database transactions, status changes, and billing actions</p>
+                    </div>
+                    <button class="btn btn-sm btn-outline" onclick="loadAuditLogs()" title="Refresh Logs">
+                        <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                        </svg>
+                        Refresh Logs
+                    </button>
+                </div>
+                <div class="card-body" style="padding:0;">
+                    <div class="table-wrapper" style="border:none; box-shadow:none; border-radius:0;">
+                        <table class="data-table" style="font-size:0.85rem;">
+                            <thead>
+                                <tr>
+                                    <th style="padding-left:24px;">Module</th>
+                                    <th>Activity Description</th>
+                                    <th>Date</th>
+                                    <th style="text-align:right; padding-right:24px;">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="audit-logs-tbody">
+                                <tr><td colspan="4" style="text-align:center; padding:24px; color:var(--text-muted);">Loading audit history...</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
