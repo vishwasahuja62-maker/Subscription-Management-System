@@ -780,6 +780,13 @@ function initPlans() {
     });
 }
 
+function formatPlanCode(plan) {
+    if (!plan || !plan.name) return 'PLN-' + String(plan?.id || '01').padStart(2, '0');
+    const firstWord = plan.name.trim().split(/\s+/)[0].toUpperCase().replace(/[^A-Z]/g, '');
+    const code = firstWord.length >= 4 ? firstWord.substring(0, 4) : firstWord.padEnd(3, 'X');
+    return 'PLN-' + code;
+}
+
 function renderPlanTable(data) {
     const tbody = document.getElementById('plan-tbody');
     if (!tbody) return;
@@ -789,7 +796,7 @@ function renderPlanTable(data) {
     }
     tbody.innerHTML = data.map(p => `
         <tr>
-            <td class="col-id" style="font-weight:700; letter-spacing:0.3px;">${escapeHtml(formatCode('PLAN', p.id))}</td>
+            <td class="col-id" style="font-weight:700; letter-spacing:0.5px;">${escapeHtml(formatPlanCode(p))}</td>
             <td><div class="cell-name">${escapeHtml(p.name)}</div></td>
             <td>${p.duration} ${p.durationUnit}</td>
             <td>₹${p.price.toLocaleString('en-IN')}</td>
