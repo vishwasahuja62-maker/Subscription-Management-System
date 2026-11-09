@@ -102,6 +102,24 @@
                 </div>
             </div>
 
+            <!-- Payment Financial Summary Bar -->
+            <div id="payment-summary-bar" style="display:flex; align-items:center; gap:16px; flex-wrap:wrap; background:var(--bg-card); border:1px solid var(--border-color); border-radius:var(--border-radius-md); padding:12px 20px; margin-bottom:16px; font-size:0.875rem;">
+                <div style="display:flex; align-items:center; gap:6px;">
+                    <span style="color:var(--text-muted); font-weight:600;">Total Records:</span>
+                    <strong id="psum-total-count" style="color:var(--text-primary);">0</strong>
+                </div>
+                <span style="color:var(--border-color);">|</span>
+                <div style="display:flex; align-items:center; gap:6px;">
+                    <span style="color:var(--text-muted); font-weight:600;">Total Paid:</span>
+                    <strong id="psum-total-paid" style="color:var(--color-success); font-size:0.95rem;">₹0</strong>
+                </div>
+                <span style="color:var(--border-color);">|</span>
+                <div style="display:flex; align-items:center; gap:6px;">
+                    <span style="color:var(--text-muted); font-weight:600;">Total Pending / Due:</span>
+                    <strong id="psum-total-pending" style="color:var(--color-warning); font-size:0.95rem;">₹0</strong>
+                </div>
+            </div>
+
             <!-- Payment Table -->
             <div class="table-wrapper">
                 <table class="data-table" id="payment-table" aria-label="Payment list">
