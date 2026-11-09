@@ -1758,10 +1758,56 @@ async function loadSystemInfo() {
     }
 }
 
+async function triggerExpirySync() {
+    const btn = document.getElementById('btn-trigger-sync');
+    const timeEl = document.getElementById('sync-last-time');
+    if (btn) btn.disabled = true;
+
+    try {
+        const res = await requestApi('SettingsServlet', 'runExpirySync');
+        showToast(res.message, res.updatedCount > 0 ? 'success' : 'info');
+        if (timeEl) timeEl.textContent = new Date().toLocaleTimeString();
+        await loadBackendData();
+        loadAuditLogs();
+        loadSystemInfo();
+    } catch (err) {
+        showToast('Sync error: ' + err.message, 'danger');
+    } finally {
+        if (btn) btn.disabled = false;
+    }
+}
+
+async function loadAuditLogs() {
+    const tbody = document.getElementById('audit-logs-tbody');
+    if (!tbody) return;
+
+    try {
+        const res = await requestApi('SettingsServlet', 'auditLogs');
+        const logs = res.logs || [];
+        if (logs.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding:20px; color:var(--text-muted);">No recent activity logs recorded yet.</td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = logs.map(l => `
+            <tr>
+                <td style="padding-left:24px;">
+                    <span class="badge ${l.module === 'Billing' ? 'badge-active' : 'badge-pending'}">${escapeHtml(l.module)}</span>
+                </td>
+                <td style="font-weight:600; color:var(--text-primary);">${escapeHtml(l.action)}</td>
+                <td style="color:var(--text-secondary); font-size:0.8rem;">${escapeHtml(l.timestamp)}</td>
+                <td style="text-align:right; padding-right:24px;">${statusBadge(escapeHtml(l.status))}</td>
+            </tr>
+        `).join('');
+    } catch (err) {
+        tbody.innerHTML = `<tr><td colspan="4" style="text-align:center; padding:16px; color:var(--color-danger);">Failed to load audit logs.</td></tr>`;
+    }
+}
+
 document.addEventListener('DOMContentLoaded', () => {
-    loadGeneralPreferences();
     if (document.getElementById('diag-db-status')) {
         loadSystemInfo();
+        loadAuditLogs();
     }
 });
 
