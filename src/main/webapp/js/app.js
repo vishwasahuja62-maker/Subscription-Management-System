@@ -546,6 +546,10 @@ function initCustomers() {
     });
 }
 
+function formatCode(prefix, id) {
+    return prefix + '-' + String(id || '').padStart(3, '0');
+}
+
 function renderCustomerTable(data) {
     const tbody = document.getElementById('customer-tbody');
     if (!tbody) return;
@@ -560,7 +564,7 @@ function renderCustomerTable(data) {
     const { paginatedData, start, totalRecords } = paginate(data, 'customers');
     tbody.innerHTML = paginatedData.map(c => `
         <tr>
-            <td class="col-id">${escapeHtml(c.id)}</td>
+            <td class="col-id" style="font-weight:700; letter-spacing:0.3px;">${escapeHtml(formatCode('CUST', c.id))}</td>
             <td><div class="cell-name">${escapeHtml(c.name)}</div><div class="cell-sub">${escapeHtml(c.email)}</div></td>
             <td>${escapeHtml(c.email)}</td>
             <td>${escapeHtml(c.phone)}</td>
@@ -934,7 +938,7 @@ function renderSubTable(data) {
     const { paginatedData, start, totalRecords } = paginate(data, 'subscriptions');
     tbody.innerHTML = paginatedData.map(s => `
         <tr>
-            <td class="col-id">${escapeHtml(s.id)}</td>
+            <td class="col-id" style="font-weight:700; letter-spacing:0.3px;">${escapeHtml(formatCode('SUB', s.id))}</td>
             <td><div class="cell-name">${escapeHtml(s.customerName)}</div></td>
             <td>${escapeHtml(s.planName)}</td>
             <td>${escapeHtml(s.startDate)}</td>
@@ -1103,7 +1107,7 @@ function renderPaymentTable(data) {
     const { paginatedData, start, totalRecords } = paginate(data, 'payments');
     tbody.innerHTML = paginatedData.map(p => `
         <tr>
-            <td class="col-id">${escapeHtml(p.id)}</td>
+            <td class="col-id" style="font-weight:700; letter-spacing:0.3px;">${escapeHtml(formatCode('PAY', p.id))}</td>
             <td><div class="cell-name">${escapeHtml(p.customerName)}</div></td>
             <td>${escapeHtml(p.planName)}</td>
             <td>₹${p.amount.toLocaleString('en-IN')}</td>
